@@ -29,6 +29,8 @@ class FrameLessWindow(QPushButton):
         self.upright_resized = False
         self.downright_resized = False
         self.downleft_resized = False
+        self.is_corner = False
+        self.__screen__ = QGuiApplication.primaryScreen().size()
         self.edge = 5
         self.justnow_size = self.size()
         self.beginning_pos_right = QCursor().pos()
@@ -91,6 +93,37 @@ class FrameLessWindow(QPushButton):
         self.DownLeftArea.mousePressEvent = self.NoneEvent
         self.DownLeftArea.mouseReleaseEvent = self.NoneEvent
 
+    def isNoneEvent(self):
+        result = True
+        for i in (self.ToUpArea.mouseMoveEvent == self.NoneEvent,
+                  self.ToUpArea.mousePressEvent == self.NoneEvent,
+                  self.ToUpArea.mouseReleaseEvent == self.NoneEvent,
+                  self.ToDownArea.mouseMoveEvent == self.NoneEvent,
+                  self.ToDownArea.mousePressEvent == self.NoneEvent,
+                  self.ToDownArea.mouseReleaseEvent == self.NoneEvent,
+                  self.ToLeftArea.mouseMoveEvent == self.NoneEvent,
+                  self.ToLeftArea.mousePressEvent == self.NoneEvent,
+                  self.ToLeftArea.mouseReleaseEvent == self.NoneEvent,
+                  self.ToRightArea.mouseMoveEvent == self.NoneEvent,
+                  self.ToRightArea.mousePressEvent == self.NoneEvent,
+                  self.ToRightArea.mouseReleaseEvent == self.NoneEvent,
+                  self.UpLeftArea.mouseMoveEvent == self.NoneEvent,
+                  self.UpLeftArea.mousePressEvent == self.NoneEvent,
+                  self.UpLeftArea.mouseReleaseEvent == self.NoneEvent,
+                  self.UpRightArea.mouseMoveEvent == self.NoneEvent,
+                  self.UpRightArea.mousePressEvent == self.NoneEvent,
+                  self.UpRightArea.mouseReleaseEvent == self.NoneEvent,
+                  self.DownRightArea.mouseMoveEvent == self.NoneEvent,
+                  self.DownRightArea.mousePressEvent == self.NoneEvent,
+                  self.DownRightArea.mouseReleaseEvent == self.NoneEvent,
+                  self.DownLeftArea.mouseMoveEvent == self.NoneEvent,
+                  self.DownLeftArea.mousePressEvent == self.NoneEvent,
+                  self.DownLeftArea.mouseReleaseEvent == self.NoneEvent):
+            if not i:
+                result = False
+                break
+        return result
+
     def setNormalEvent(self):
         self.ToUpArea.mouseMoveEvent = self.toUpMoveEvent
         self.ToUpArea.mousePressEvent = self.toUpPressEvent
@@ -120,6 +153,7 @@ class FrameLessWindow(QPushButton):
         self.DownLeftArea.mouseMoveEvent = self.DownLeftMoveEvent
         self.DownLeftArea.mousePressEvent = self.DownLeftPressEvent
         self.DownLeftArea.mouseReleaseEvent = self.DownLeftReleaseEvent
+        self.is_corner = False
 
     def setWindowTitleBar(self,
                           background_color_rgba: tuple[int] | list[int] | set[int] = (25, 25, 25, 0.5),
@@ -167,41 +201,75 @@ class FrameLessWindow(QPushButton):
         self.setNormalEvent()
 
     def showUpLeft(self):
-        pass
+        self.setGeometry(0, 0, self.__screen__.width() // 2,
+                         (self.__screen__.height() - 50) // 2)
+        self.setNoneEvent()
+        self.is_corner = True
 
     def showFullLeft(self):
-        pass
+        self.setGeometry(0, 0, self.__screen__.width() // 2,
+                         self.__screen__.height() - 50)
+        self.setNoneEvent()
 
     def showDownLeft(self):
-        pass
+        self.setGeometry(0, (self.__screen__.height() - 50) // 2,
+                         self.__screen__.width() // 2,
+                         (self.__screen__.height() - 50) // 2)
+        self.setNoneEvent()
+        self.is_corner = True
 
     def showUpRight(self):
-        pass
+        self.setGeometry(self.__screen__.width() // 2, 0,
+                         self.__screen__.width() // 2,
+                         (self.__screen__.height() - 50) // 2)
+        self.setNoneEvent()
+        self.is_corner = True
 
     def showDownRight(self):
-        pass
+        self.setGeometry(self.__screen__.width() // 2,
+                         (self.__screen__.height() - 50) // 2,
+                         self.__screen__.width() // 2,
+                         (self.__screen__.height() - 50) // 2)
+        self.setNoneEvent()
+        self.is_corner = True
 
     def showFullRight(self):
-        pass
+        self.setGeometry(self.__screen__.width() // 2, 0,
+                         self.__screen__.width() // 2,
+                         self.__screen__.height() - 50)
+        self.setNoneEvent()
 
     def isMaximized(self) -> bool:
-        if [self.size().width(), self.size().height()] == [QGuiApplication.primaryScreen().size().width(),
-                                                           QGuiApplication.primaryScreen().size().height() - 50]:
+        if [self.size().width(), self.size().height()] == [self.__screen__.width(),
+                                                           self.__screen__.height() - 50]:
             return True
         else:
             return False
 
     def isLined(self) -> bool:
-        if self.size().height() == QGuiApplication.primaryScreen().size().height() - 50 and self.pos().y() == 0:
+        if self.size().height() == self.__screen__.height() - 50 and self.pos().y() == 0:
             return True
         else:
             return False
 
     def isFullSide(self) -> bool:
-        pass
+        if self.size().width() == self.__screen__.width() // 2 and \
+                self.size().height() == self.__screen__.height() - 50 and \
+                self.pos().y() == 0:
+            if self.pos().x() == self.__screen__.width() // 2 or \
+                    self.pos().x() == 0:
+                return True
+            else:
+                return False
+        else:
+            return False
 
     def isFullCorner(self) -> bool:
-        pass
+        result = False
+        if self.is_corner == True:
+            if self.isNoneEvent():
+                result = True
+        return result
 
     def resizeEvent(self, event):
         self.WindowTitleBar.setGeometry(0, 0, self.size().width(), 35)
@@ -222,7 +290,7 @@ class FrameLessWindow(QPushButton):
 
     def titleDoubleClickedEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton:
-            if self.isMaximized() or self.isLined():
+            if self.isMaximized() or self.isLined() or self.isFullCorner() or self.isFullSide():
                 self.showNormal()
             else:
                 self.showMaximized()
@@ -317,6 +385,10 @@ class FrameLessWindow(QPushButton):
             self.mouse_click_position = event.globalPosition().toPoint() - self.pos()
             if self.isMaximized():
                 self.movemode = 1
+            elif self.isFullSide():
+                self.movemode = 3
+            elif self.isFullCorner():
+                self.movemode = 4
             elif self.isLined():
                 self.movemode = 2
             else:
@@ -327,24 +399,49 @@ class FrameLessWindow(QPushButton):
         if self.is_mouse_pressed:
             if self.movemode == 0:
                 self.move(event.globalPosition().toPoint() - self.mouse_click_position)
-            elif self.movemode == 2:
+            elif self.movemode == 3:
                 self.showSizeNormal()
-                self.move(event.globalPosition().toPoint() - self.mouse_click_position)
+                self.move(
+                    event.globalPosition().toPoint().x() - self.mouse_click_position.x() * self.normal_geometry.width() // (
+                            QGuiApplication.primaryScreen().size().width() // 2),
+                    (event.globalPosition().toPoint() - self.mouse_click_position).y())
             elif self.movemode == 1:
                 self.showSizeNormal()
                 self.move(
                     event.globalPosition().toPoint().x() - self.mouse_click_position.x() * self.normal_geometry.width() // QGuiApplication.primaryScreen().geometry().width(),
                     (event.globalPosition().toPoint() - self.mouse_click_position).y())
-
+            elif self.movemode == 4:
+                self.showSizeNormal()
+                self.move(
+                    event.globalPosition().toPoint().x() - self.mouse_click_position.x() * self.normal_geometry.width() // (
+                            QGuiApplication.primaryScreen().size().width() // 2),
+                    (event.globalPosition().toPoint() - self.mouse_click_position).y())
+            elif self.movemode == 2:
+                self.showSizeNormal()
+                self.move(event.globalPosition().toPoint() - self.mouse_click_position)
         event.accept()
 
     def moveReleaseEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton:
             self.is_mouse_pressed = False
-            if not (self.isMaximized() or self.isLined()):
-                self.normal_geometry = QRect(self.pos().x(), self.pos().y(), self.size().width(), self.size().height())
-            if QCursor.pos().y() <= 0 and QGuiApplication.primaryScreen().geometry().width() - 5 > QCursor.pos().x() > 5:
+            if QCursor.pos().y() <= 0 and self.__screen__.width() - 5 > QCursor.pos().x() > 5:
                 self.showMaximized()
+            elif QCursor.pos().x() <= 5 and QCursor.pos().y() <= 5:
+                self.showUpLeft()
+            elif QCursor.pos().x() >= self.__screen__.width() - 5 and QCursor.pos().y() <= 5:
+                self.showUpRight()
+            elif QCursor.pos().x() <= 5 and QCursor.pos().y() >= self.__screen__.height() - 50:
+                self.showDownLeft()
+            elif QCursor.pos().y() >= self.__screen__.height() - 50 and \
+                    QCursor.pos().x() >= self.__screen__.width() - 5:
+                self.showDownRight()
+            elif QCursor.pos().x() <= 5 <= QCursor.pos().y() <= self.__screen__.height() - 5:
+                self.showFullLeft()
+            elif QCursor.pos().x() >= self.__screen__.width() - 5 and \
+                    self.__screen__.height() - 5 >= QCursor.pos().y() >= 5:
+                self.showFullRight()
+            elif not (self.isMaximized() or self.isLined() or self.isFullSide() or self.isFullCorner()):
+                self.normal_geometry = QRect(self.pos().x(), self.pos().y(), self.size().width(), self.size().height())
         event.accept()
 
     def toUpPressEvent(self, event: QMouseEvent):
@@ -390,7 +487,11 @@ class FrameLessWindow(QPushButton):
     def toDownReleaseEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton:
             self.toDownPress = False
-            self.normal_geometry = QRect(self.pos().x(), self.pos().y(), self.size().width(), self.size().height())
+            if QCursor.pos().y() >= self.__screen__.height() - 50 and \
+                    5 <= QCursor.pos().x() <= self.__screen__.width() - self.edge:
+                self.showLined()
+            else:
+                self.normal_geometry = QRect(self.pos().x(), self.pos().y(), self.size().width(), self.size().height())
         event.accept()
 
     def toLeftPressEvent(self, event: QMouseEvent):
@@ -526,7 +627,8 @@ class FrameLessWindow(QPushButton):
         event.accept()
 
     def DownRightMoveEvent(self, event: QMouseEvent):
-        if self.downright_resized and (event.globalPosition().toPoint() - self.pos()).y() >= self.minimumHeight() - self.edge:
+        if self.downright_resized and (
+                event.globalPosition().toPoint() - self.pos()).y() >= self.minimumHeight() - self.edge:
             self.resize(self.size().width(), self._height_ + (QCursor.pos().y() - self.beginning_pos_down.y()))
         if self.downright_resized and QCursor.pos().x() >= self.pos().x() + self.minimumWidth() - self.edge:
             self.resize(self._width_ + (QCursor.pos().x() - self.beginning_pos_right.x()), self.size().height())
@@ -564,7 +666,8 @@ class FrameLessWindow(QPushButton):
         event.accept()
 
     def DownLeftMoveEvent(self, event: QMouseEvent):
-        if self.downleft_resized and (event.globalPosition().toPoint() - self.pos()).y() >= self.minimumHeight() - self.edge:
+        if self.downleft_resized and (
+                event.globalPosition().toPoint() - self.pos()).y() >= self.minimumHeight() - self.edge:
             self.resize(self.size().width(), self._height_ + (QCursor.pos().y() - self.beginning_pos_down.y()))
         if self.downleft_resized and self.pos().x() + self.size().width() - QCursor.pos().x() >= self.minimumWidth():
             self.resize(self._width_ - QCursor.pos().x() + self.beginning_pos_left.x(), self.size().height())

@@ -32,13 +32,13 @@ class Desktop(QMainWindow):
         self.taskbar.move(0, self.size().height() - self.taskbar.size().height())
         self.taskbar.setStyleSheet(
             "QPushButton {"
-            "background-color: rgba(20,20,20,0.9);"
+            "background-color: rgba(20,20,20,1);"
             "}"
             "QPushButton:hover {"
-            "background-color: rgba(25,25,25,0.9);"
+            "background-color: rgba(25,25,25,1);"
             "}"
             "QPushButton:pressed {"
-            "background-color: rgba(30,30,30,0.9);"
+            "background-color: rgba(30,30,30,1);"
             "}"
         )
         self.taskbar.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
