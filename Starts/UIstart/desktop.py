@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (QMainWindow,
                                QMenu)
 from os import system
 from System.Settings.settings import Settings
-
+from System.Settings.Settings.theme import THEME
 
 class Desktop(QMainWindow):
     startmenu_showed: bool
@@ -119,7 +119,6 @@ class Desktop(QMainWindow):
             self.taskbar.raise_()
             self.startbutton.raise_()
 
-        self.startmenu_showed = False
         self.startmenu = QPushButton(self)
         self.startmenu.resize(500, 700)
         self.startmenu.move(2, self.size().height())
@@ -158,28 +157,35 @@ class Desktop(QMainWindow):
 
     def __init__(self):
         super(Desktop, self).__init__()
+        self.theme = THEME
         self.tasklist = []
         self.UIinit()
         self.resize(1600, 900)
-        # self.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
+        self.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
         self.showFullScreen()
+        self.startmenu_showed = False
         self.setWindowTitle("QSystem")
 
     def startButtonClickedEvent(self):
         if not self.startmenu_showed:
-            self.startmenu.move(2, self.size().height() - self.startmenu.size().height() - 55)
-            self.startmenu.raise_()
-            self.startmenu_showed = True
+            self.startMenuShowedEvent()
         else:
-            self.startmenu.move(2, self.size().height())
-            self.startmenu_showed = False
+            self.startMenuHideEvent()
 
     def backgroundClickedEvent(self):
         if not self.startmenu_showed:
             pass
         else:
-            self.startmenu.move(2, self.size().height())
-            self.startmenu_showed = False
+            self.startMenuHideEvent()
+
+    def startMenuShowedEvent(self):
+        self.startmenu.move(2, self.size().height() - self.startmenu.size().height() - 55)
+        self.startmenu.raise_()
+        self.startmenu_showed = True
+
+    def startMenuHideEvent(self):
+        self.startmenu.move(2, self.size().height())
+        self.startmenu_showed = False
 
     def resizeEvent(self, event):
         super(Desktop, self).resizeEvent(event)
@@ -214,3 +220,4 @@ class Desktop(QMainWindow):
     def sleepEvent(self):
         self.backgroundClickedEvent()
         self.showMinimized()
+

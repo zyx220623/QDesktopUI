@@ -1,24 +1,40 @@
 from PySide6.QtCore import (Qt,
                             QRect,
-                            QSize)
+                            QSize,
+                            QPoint)
 from PySide6.QtGui import (QPixmap,
                            QMouseEvent,
                            QCursor,
-                           QGuiApplication)
+                           QGuiApplication,
+                           QIcon)
 from PySide6.QtWidgets import (QPushButton,
-                               QWidget,
-                               QApplication)
+                               QWidget)
+from System.Settings.Settings.theme import THEME
 
 
 class FrameLessWindow(QPushButton):
     edge: int
 
-    def NoneEvent(self, event: QMouseEvent | None = None):
+    def __NoneEvent(self, event: QMouseEvent | None = None):
         pass
 
-    def __init__(self, appname: str = None, apphandle: int = None, parent: QWidget = None,
-                 background_color_rgba: list[int] | tuple[int] | set[int] = (25, 25, 25, 0.9)):
-        super(FrameLessWindow, self).__init__(parent)
+    def __theme(self):
+        self.theme = THEME
+        if self.theme == "dark":
+            self.button_hovered_color = [50, 50, 50, 1]
+            self.minimum_color = [255, 255, 255, 1]
+            self.title_background_color_rgba = [0, 0, 0, 1]
+            self.title_text_color_rgba = [255, 255, 255, 1]
+            self.__background_color_rgba = [0, 0, 0, 0.86]
+        elif self.theme == "light":
+            self.button_hovered_color = [230, 230, 230, 1]
+            self.minimum_color = [0, 0, 0, 1]
+            self.title_background_color_rgba = [255, 255, 255, 1]
+            self.title_text_color_rgba = [0, 0, 0, 1]
+            self.__background_color_rgba = [255, 255, 255, 0.86]
+
+    def __attributeInit(self):
+        self.__theme()
         self.movemode = 0
         self.is_mouse_pressed = False
         self.up_resized = False
@@ -29,247 +45,65 @@ class FrameLessWindow(QPushButton):
         self.upright_resized = False
         self.downright_resized = False
         self.downleft_resized = False
-        self.is_corner = False
-        self.__screen__ = QGuiApplication.primaryScreen().size()
         self.edge = 5
-        self.justnow_size = self.size()
         self.beginning_pos_right = QCursor().pos()
         self.beginning_pos_up = QCursor().pos()
         self.beginning_pos_down = QCursor().pos()
         self.setMouseTracking(True)
-        self.setMinimumSize(960, 540)
-        self.normal_geometry = QRect(self.pos().x(), self.pos().y(), self.size().width(), self.size().height())
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
+        self.__screen__ = QGuiApplication.primaryScreen().size()
+
+    def __init__(self, appname: str = None, apphandle: int = None, parent: QWidget = None,
+                 background_color_rgba: list[int] | tuple[int] | set[int] = (255, 255, 255, 0.9),
+                 taskbar_height: int = 50,
+                 MinimumSize: QSize = QSize(400, 225),
+                 ReSize: QSize = QSize(400, 225),
+                 Position: QPoint | None = None,
+                 title_height: int = 35,
+                 themeBackground: bool = False):
+        super(FrameLessWindow, self).__init__(parent)
+        self.__attributeInit()
+        self.__parent__ = parent
+        self.setMinimumSize(MinimumSize)
+        self.resize(ReSize)
+        self.taskbar_height = taskbar_height
         self.appname = appname
         self.apphandle = apphandle
-        self.parent_name = parent
+        self.background_color_rgba = background_color_rgba
+        if themeBackground:
+            self.background_color_rgba = self.__background_color_rgba
         self.setStyleSheet("QPushButton {"
                            f"background-color: rgba({background_color_rgba[0]},{background_color_rgba[1]},{background_color_rgba[2]},{background_color_rgba[3]});"
                            "border: none;"
-                           "}"
-                           )
-        self.setWindowTitleBar()
-        self.setMainWidget()
+                           "}")
+        self.title_height = title_height
+        self.__setMainWidget()
+        self.__setThreeButton()
+        if Position is not None:
+            self.move(Position)
+        else:
+            self.move((self.__screen__.width() - self.size().width()) // 2,
+                      (self.__screen__.height() - self.size().height() - self.taskbar_height) // 2)
+        self.normal_geometry = QRect(self.pos().x(), self.pos().y(), self.size().width(), self.size().height())
+        self.main_widget.clicked.connect(self.windowClickedEvent)
 
     def setWindowTitle(self, arg__1):
         self.title = arg__1
-        self.setWindowTitleBar()
+        self.__setWindowTitleBar(background_color_rgba=self.title_background_color_rgba,
+                                 color_rgba=self.title_text_color_rgba,
+                                 title_height=self.title_height)
 
-    def setMainWidget(self):
-        self.main_widget = QPushButton(self)
-        self.main_widget.setStyleSheet("QPushButton {"
-                                       "border: none;"
-                                       "background-color: rgba(0, 0, 0, 0);"
-                                       "}")
-        self.main_widget.setGeometry(self.edge,
-                                     self.title_height,
-                                     self.size().width() - 2 * self.edge,
-                                     self.size().height() - self.title_height - self.edge)
-
-        self.main_widget.raise_()
-
-    def setNoneEvent(self):
-        self.ToUpArea.mouseMoveEvent = self.NoneEvent
-        self.ToUpArea.mousePressEvent = self.NoneEvent
-        self.ToUpArea.mouseReleaseEvent = self.NoneEvent
-        self.ToDownArea.mouseMoveEvent = self.NoneEvent
-        self.ToDownArea.mousePressEvent = self.NoneEvent
-        self.ToDownArea.mouseReleaseEvent = self.NoneEvent
-        self.ToLeftArea.mouseMoveEvent = self.NoneEvent
-        self.ToLeftArea.mousePressEvent = self.NoneEvent
-        self.ToLeftArea.mouseReleaseEvent = self.NoneEvent
-        self.ToRightArea.mouseMoveEvent = self.NoneEvent
-        self.ToRightArea.mousePressEvent = self.NoneEvent
-        self.ToRightArea.mouseReleaseEvent = self.NoneEvent
-        self.UpLeftArea.mouseMoveEvent = self.NoneEvent
-        self.UpLeftArea.mousePressEvent = self.NoneEvent
-        self.UpLeftArea.mouseReleaseEvent = self.NoneEvent
-        self.UpRightArea.mouseMoveEvent = self.NoneEvent
-        self.UpRightArea.mousePressEvent = self.NoneEvent
-        self.UpRightArea.mouseReleaseEvent = self.NoneEvent
-        self.DownRightArea.mouseMoveEvent = self.NoneEvent
-        self.DownRightArea.mousePressEvent = self.NoneEvent
-        self.DownRightArea.mouseReleaseEvent = self.NoneEvent
-        self.DownLeftArea.mouseMoveEvent = self.NoneEvent
-        self.DownLeftArea.mousePressEvent = self.NoneEvent
-        self.DownLeftArea.mouseReleaseEvent = self.NoneEvent
-
-    def isNoneEvent(self):
-        result = True
-        for i in (self.ToUpArea.mouseMoveEvent == self.NoneEvent,
-                  self.ToUpArea.mousePressEvent == self.NoneEvent,
-                  self.ToUpArea.mouseReleaseEvent == self.NoneEvent,
-                  self.ToDownArea.mouseMoveEvent == self.NoneEvent,
-                  self.ToDownArea.mousePressEvent == self.NoneEvent,
-                  self.ToDownArea.mouseReleaseEvent == self.NoneEvent,
-                  self.ToLeftArea.mouseMoveEvent == self.NoneEvent,
-                  self.ToLeftArea.mousePressEvent == self.NoneEvent,
-                  self.ToLeftArea.mouseReleaseEvent == self.NoneEvent,
-                  self.ToRightArea.mouseMoveEvent == self.NoneEvent,
-                  self.ToRightArea.mousePressEvent == self.NoneEvent,
-                  self.ToRightArea.mouseReleaseEvent == self.NoneEvent,
-                  self.UpLeftArea.mouseMoveEvent == self.NoneEvent,
-                  self.UpLeftArea.mousePressEvent == self.NoneEvent,
-                  self.UpLeftArea.mouseReleaseEvent == self.NoneEvent,
-                  self.UpRightArea.mouseMoveEvent == self.NoneEvent,
-                  self.UpRightArea.mousePressEvent == self.NoneEvent,
-                  self.UpRightArea.mouseReleaseEvent == self.NoneEvent,
-                  self.DownRightArea.mouseMoveEvent == self.NoneEvent,
-                  self.DownRightArea.mousePressEvent == self.NoneEvent,
-                  self.DownRightArea.mouseReleaseEvent == self.NoneEvent,
-                  self.DownLeftArea.mouseMoveEvent == self.NoneEvent,
-                  self.DownLeftArea.mousePressEvent == self.NoneEvent,
-                  self.DownLeftArea.mouseReleaseEvent == self.NoneEvent):
-            if not i:
-                result = False
-                break
-        return result
-
-    def setNormalEvent(self):
-        self.ToUpArea.mouseMoveEvent = self.toUpMoveEvent
-        self.ToUpArea.mousePressEvent = self.toUpPressEvent
-        self.ToUpArea.mouseReleaseEvent = self.toUpReleaseEvent
-        self.ToDownArea.mouseMoveEvent = self.toDownMoveEvent
-        self.ToDownArea.mousePressEvent = self.toDownPressEvent
-        self.ToDownArea.mouseReleaseEvent = self.toDownReleaseEvent
-        self.ToLeftArea.mouseMoveEvent = self.toLeftMoveEvent
-        self.ToLeftArea.mousePressEvent = self.toLeftPressEvent
-        self.ToLeftArea.mouseReleaseEvent = self.toLeftReleaseEvent
-        self.ToRightArea.mouseMoveEvent = self.toRightMoveEvent
-        self.ToRightArea.mousePressEvent = self.toRightPressEvent
-        self.ToRightArea.mouseReleaseEvent = self.toRightReleaseEvent
-        self.MoveableArea.mousePressEvent = self.movePressEvent
-        self.MoveableArea.mouseMoveEvent = self.moveMoveEvent
-        self.MoveableArea.mouseReleaseEvent = self.moveReleaseEvent
-        self.MoveableArea.mouseDoubleClickEvent = self.titleDoubleClickedEvent
-        self.UpLeftArea.mouseMoveEvent = self.UpLeftMoveEvent
-        self.UpLeftArea.mousePressEvent = self.UpLeftPressEvent
-        self.UpLeftArea.mouseReleaseEvent = self.UpLeftReleaseEvent
-        self.UpRightArea.mouseMoveEvent = self.UpRightMoveEvent
-        self.UpRightArea.mousePressEvent = self.UpRightPressEvent
-        self.UpRightArea.mouseReleaseEvent = self.UpRightReleaseEvent
-        self.DownRightArea.mouseMoveEvent = self.DownRightMoveEvent
-        self.DownRightArea.mousePressEvent = self.DownRightPressEvent
-        self.DownRightArea.mouseReleaseEvent = self.DownRightReleaseEvent
-        self.DownLeftArea.mouseMoveEvent = self.DownLeftMoveEvent
-        self.DownLeftArea.mousePressEvent = self.DownLeftPressEvent
-        self.DownLeftArea.mouseReleaseEvent = self.DownLeftReleaseEvent
-        self.is_corner = False
-
-    def setWindowTitleBar(self,
-                          background_color_rgba: tuple[int] | list[int] | set[int] = (25, 25, 25, 0.5),
-                          color_rgba: tuple[int] | list[int] | set[int] = (255, 255, 255, 1),
-                          title_height: int = 35):
-        try:
-            self.title
-        except:
-            self.title = ""
-        self.title_height = title_height
-        self.WindowTitleBackground = QPushButton(self)
-        self.WindowTitleBackground.setStyleSheet("QPushButton {"
-                                                 f"background-color: rgba({background_color_rgba[0]}, {background_color_rgba[1]}, {background_color_rgba[2]}, {background_color_rgba[3]});"
-                                                 "border: none;"
-                                                 "}")
-        self.WindowTitleBackground.setGeometry(0, 0, QGuiApplication.primaryScreen().size().width(), title_height)
-        self.WindowTitleBar = QPushButton(self.title, self)
-        self.WindowTitleBar.setGeometry(0, 0, self.size().width(), title_height)
-        self.WindowTitleBar.setStyleSheet("QPushButton {"
-                                          'font: normal normal 15px "微软雅黑";'
-                                          f"background-color: rgba(0,0,0,0);"
-                                          f"color: rgba({color_rgba[0]}, {color_rgba[1]}, {color_rgba[2]}, {color_rgba[3]});"
-                                          "border: none;"
-                                          "}")
-        self.setMoveableArea()
-
-    def showMaximized(self):
-        self.setGeometry(0, 0, QGuiApplication.primaryScreen().size().width(),
-                         QGuiApplication.primaryScreen().size().height() - 50)
-        self.setNoneEvent()
-
-    def showLined(self):
-        self.setGeometry(self.pos().x(), 0, self.size().width(), QGuiApplication.primaryScreen().size().height() - 50)
-        self.setNoneEvent()
-
-    def showNormal(self):
-        self.setGeometry(self.normal_geometry.x(), self.normal_geometry.y(), self.normal_geometry.width(),
-                         self.normal_geometry.height())
-        self.setNormalEvent()
-        if self.pos().y() <= 5 and self.isLined() is not True:
-            self.move(self.normal_geometry.x(), 5)
-
-    def showSizeNormal(self):
-        self.resize(self.normal_geometry.width(), self.normal_geometry.height())
-        self.setNormalEvent()
-
-    def showUpLeft(self):
-        self.setGeometry(0, 0, self.__screen__.width() // 2,
-                         (self.__screen__.height() - 50) // 2)
-        self.setNoneEvent()
-        self.is_corner = True
-
-    def showFullLeft(self):
-        self.setGeometry(0, 0, self.__screen__.width() // 2,
-                         self.__screen__.height() - 50)
-        self.setNoneEvent()
-
-    def showDownLeft(self):
-        self.setGeometry(0, (self.__screen__.height() - 50) // 2,
-                         self.__screen__.width() // 2,
-                         (self.__screen__.height() - 50) // 2)
-        self.setNoneEvent()
-        self.is_corner = True
-
-    def showUpRight(self):
-        self.setGeometry(self.__screen__.width() // 2, 0,
-                         self.__screen__.width() // 2,
-                         (self.__screen__.height() - 50) // 2)
-        self.setNoneEvent()
-        self.is_corner = True
-
-    def showDownRight(self):
-        self.setGeometry(self.__screen__.width() // 2,
-                         (self.__screen__.height() - 50) // 2,
-                         self.__screen__.width() // 2,
-                         (self.__screen__.height() - 50) // 2)
-        self.setNoneEvent()
-        self.is_corner = True
-
-    def showFullRight(self):
-        self.setGeometry(self.__screen__.width() // 2, 0,
-                         self.__screen__.width() // 2,
-                         self.__screen__.height() - 50)
-        self.setNoneEvent()
-
-    def isMaximized(self) -> bool:
-        if [self.size().width(), self.size().height()] == [self.__screen__.width(),
-                                                           self.__screen__.height() - 50]:
-            return True
-        else:
-            return False
-
-    def isLined(self) -> bool:
-        if self.size().height() == self.__screen__.height() - 50 and self.pos().y() == 0:
-            return True
-        else:
-            return False
-
-    def isFullSide(self) -> bool:
-        if self.size().width() == self.__screen__.width() // 2 and \
-                self.size().height() == self.__screen__.height() - 50 and \
-                self.pos().y() == 0:
-            if self.pos().x() == self.__screen__.width() // 2 or \
-                    self.pos().x() == 0:
-                return True
-            else:
-                return False
-        else:
-            return False
-
-    def isFullCorner(self) -> bool:
-        result = False
-        if self.is_corner == True:
-            if self.isNoneEvent():
-                result = True
-        return result
+    def setWindowIcon(self, icon: QIcon | QPixmap):
+        self.__icon__ = icon
+        self.icon_image = QPushButton(self)
+        self.icon_image.setIcon(icon)
+        self.icon_image.setIconSize(QSize(self.title_height - 10, self.title_height - 10))
+        self.icon_image.setFixedSize(self.title_height - 10, self.title_height - 10)
+        self.icon_image.move(5, 5)
+        self.icon_image.setStyleSheet("QPushButton {"
+                                      "background-color: rgba(0,0,0,0);"
+                                      "border: none;"
+                                      "}")
 
     def resizeEvent(self, event):
         self.WindowTitleBar.setGeometry(0, 0, self.size().width(), 35)
@@ -287,28 +121,323 @@ class FrameLessWindow(QPushButton):
                                        self.edge)
         self.DownLeftArea.setGeometry(0, self.size().height() - self.edge, self.edge,
                                       self.edge)
+        self.CloseButton.move(self.size().width() - self.CloseButton.size().width(), 0)
+        self.MaximumButton.move(self.CloseButton.pos().x() - self.MaximumButton.size().width(), 0)
+        self.MinimumButton.move(self.MaximumButton.pos().x() - self.MinimumButton.size().width(), 0)
+        self.CloseButton.raise_()
+        self.MaximumButton.raise_()
+        self.MinimumButton.raise_()
+        self.ToUpArea.raise_()
+        self.ToRightArea.raise_()
+        self.UpRightArea.raise_()
+        self.DownRightArea.raise_()
 
-    def titleDoubleClickedEvent(self, event: QMouseEvent):
+    def __setMainWidget(self):
+        self.main_widget = QPushButton(self)
+        self.main_widget.setStyleSheet("QPushButton {"
+                                       "border: none;"
+                                       "background-color: rgba(0, 0, 0, 0);"
+                                       "}")
+        self.main_widget.setGeometry(self.edge,
+                                     self.title_height,
+                                     self.size().width() - 2 * self.edge,
+                                     self.size().height() - self.title_height - self.edge)
+
+        self.main_widget.raise_()
+
+    def __setNoneEvent(self):
+        self.ToUpArea.mouseMoveEvent = self.__NoneEvent
+        self.ToUpArea.mousePressEvent = self.__NoneEvent
+        self.ToUpArea.mouseReleaseEvent = self.__NoneEvent
+        self.ToDownArea.mouseMoveEvent = self.__NoneEvent
+        self.ToDownArea.mousePressEvent = self.__NoneEvent
+        self.ToDownArea.mouseReleaseEvent = self.__NoneEvent
+        self.ToLeftArea.mouseMoveEvent = self.__NoneEvent
+        self.ToLeftArea.mousePressEvent = self.__NoneEvent
+        self.ToLeftArea.mouseReleaseEvent = self.__NoneEvent
+        self.ToRightArea.mouseMoveEvent = self.__NoneEvent
+        self.ToRightArea.mousePressEvent = self.__NoneEvent
+        self.ToRightArea.mouseReleaseEvent = self.__NoneEvent
+        self.UpLeftArea.mouseMoveEvent = self.__NoneEvent
+        self.UpLeftArea.mousePressEvent = self.__NoneEvent
+        self.UpLeftArea.mouseReleaseEvent = self.__NoneEvent
+        self.UpRightArea.mouseMoveEvent = self.__NoneEvent
+        self.UpRightArea.mousePressEvent = self.__NoneEvent
+        self.UpRightArea.mouseReleaseEvent = self.__NoneEvent
+        self.DownRightArea.mouseMoveEvent = self.__NoneEvent
+        self.DownRightArea.mousePressEvent = self.__NoneEvent
+        self.DownRightArea.mouseReleaseEvent = self.__NoneEvent
+        self.DownLeftArea.mouseMoveEvent = self.__NoneEvent
+        self.DownLeftArea.mousePressEvent = self.__NoneEvent
+        self.DownLeftArea.mouseReleaseEvent = self.__NoneEvent
+
+    def __isNoneEvent(self):
+        result = True
+        for i in (self.ToUpArea.mouseMoveEvent == self.__NoneEvent,
+                  self.ToUpArea.mousePressEvent == self.__NoneEvent,
+                  self.ToUpArea.mouseReleaseEvent == self.__NoneEvent,
+                  self.ToDownArea.mouseMoveEvent == self.__NoneEvent,
+                  self.ToDownArea.mousePressEvent == self.__NoneEvent,
+                  self.ToDownArea.mouseReleaseEvent == self.__NoneEvent,
+                  self.ToLeftArea.mouseMoveEvent == self.__NoneEvent,
+                  self.ToLeftArea.mousePressEvent == self.__NoneEvent,
+                  self.ToLeftArea.mouseReleaseEvent == self.__NoneEvent,
+                  self.ToRightArea.mouseMoveEvent == self.__NoneEvent,
+                  self.ToRightArea.mousePressEvent == self.__NoneEvent,
+                  self.ToRightArea.mouseReleaseEvent == self.__NoneEvent,
+                  self.UpLeftArea.mouseMoveEvent == self.__NoneEvent,
+                  self.UpLeftArea.mousePressEvent == self.__NoneEvent,
+                  self.UpLeftArea.mouseReleaseEvent == self.__NoneEvent,
+                  self.UpRightArea.mouseMoveEvent == self.__NoneEvent,
+                  self.UpRightArea.mousePressEvent == self.__NoneEvent,
+                  self.UpRightArea.mouseReleaseEvent == self.__NoneEvent,
+                  self.DownRightArea.mouseMoveEvent == self.__NoneEvent,
+                  self.DownRightArea.mousePressEvent == self.__NoneEvent,
+                  self.DownRightArea.mouseReleaseEvent == self.__NoneEvent,
+                  self.DownLeftArea.mouseMoveEvent == self.__NoneEvent,
+                  self.DownLeftArea.mousePressEvent == self.__NoneEvent,
+                  self.DownLeftArea.mouseReleaseEvent == self.__NoneEvent):
+            if not i:
+                result = False
+                break
+        return result
+
+    def __setNormalEvent(self):
+        self.ToUpArea.mouseMoveEvent = self.__toUpMoveEvent
+        self.ToUpArea.mousePressEvent = self.__toUpPressEvent
+        self.ToUpArea.mouseReleaseEvent = self.__toUpReleaseEvent
+        self.ToDownArea.mouseMoveEvent = self.__toDownMoveEvent
+        self.ToDownArea.mousePressEvent = self.__toDownPressEvent
+        self.ToDownArea.mouseReleaseEvent = self.__toDownReleaseEvent
+        self.ToLeftArea.mouseMoveEvent = self.__toLeftMoveEvent
+        self.ToLeftArea.mousePressEvent = self.__toLeftPressEvent
+        self.ToLeftArea.mouseReleaseEvent = self.__toLeftReleaseEvent
+        self.ToRightArea.mouseMoveEvent = self.__toRightMoveEvent
+        self.ToRightArea.mousePressEvent = self.__toRightPressEvent
+        self.ToRightArea.mouseReleaseEvent = self.__toRightReleaseEvent
+        self.MoveableArea.mousePressEvent = self.__movePressEvent
+        self.MoveableArea.mouseMoveEvent = self.__moveMoveEvent
+        self.MoveableArea.mouseReleaseEvent = self.__moveReleaseEvent
+        self.MoveableArea.mouseDoubleClickEvent = self.__titleDoubleClickedEvent
+        self.UpLeftArea.mouseMoveEvent = self.__UpLeftMoveEvent
+        self.UpLeftArea.mousePressEvent = self.__UpLeftPressEvent
+        self.UpLeftArea.mouseReleaseEvent = self.__UpLeftReleaseEvent
+        self.UpRightArea.mouseMoveEvent = self.__UpRightMoveEvent
+        self.UpRightArea.mousePressEvent = self.__UpRightPressEvent
+        self.UpRightArea.mouseReleaseEvent = self.__UpRightReleaseEvent
+        self.DownRightArea.mouseMoveEvent = self.__DownRightMoveEvent
+        self.DownRightArea.mousePressEvent = self.__DownRightPressEvent
+        self.DownRightArea.mouseReleaseEvent = self.__DownRightReleaseEvent
+        self.DownLeftArea.mouseMoveEvent = self.__DownLeftMoveEvent
+        self.DownLeftArea.mousePressEvent = self.__DownLeftPressEvent
+        self.DownLeftArea.mouseReleaseEvent = self.__DownLeftReleaseEvent
+
+    def showMaximized(self):
+        """自定义最大化方法"""
+        self.MaximumButton.setIcon(QIcon(f"Starts/UIstart/desktopimage/{self.theme}/normal.png"))
+        self.setGeometry(0, 0, self.__screen__.width(), self.__screen__.height() - self.taskbar_height)
+        self.__setNoneEvent()
+
+    def showLined(self):
+        self.setGeometry(self.pos().x(), 0, self.size().width(), self.__screen__.height() - self.taskbar_height)
+        self.__setNoneEvent()
+
+    def showNormal(self):
+        self.setGeometry(self.normal_geometry.x(), self.normal_geometry.y(), self.normal_geometry.width(),
+                         self.normal_geometry.height())
+        self.MaximumButton.setIcon(QIcon(f"Starts/UIstart/desktopimage/{self.theme}/max.png"))
+        self.__setNormalEvent()
+        if self.pos().y() <= 5 and self.__isLined() is not True:
+            self.move(self.normal_geometry.x(), 5)
+
+    def showSizeNormal(self):
+        self.resize(self.normal_geometry.width(), self.normal_geometry.height())
+        self.MaximumButton.setIcon(QIcon(f"Starts/UIstart/desktopimage/{self.theme}/max.png"))
+        self.__setNormalEvent()
+
+    def showUpLeft(self):
+        self.setGeometry(0, 0, self.__screen__.width() // 2,
+                         (self.__screen__.height() - self.taskbar_height) // 2)
+        self.__setNoneEvent()
+
+    def showFullLeft(self):
+        self.setGeometry(0, 0, self.__screen__.width() // 2,
+                         self.__screen__.height() - self.taskbar_height)
+        self.__setNoneEvent()
+
+    def showDownLeft(self):
+        self.setGeometry(0, (self.__screen__.height() - self.taskbar_height) // 2,
+                         self.__screen__.width() // 2,
+                         (self.__screen__.height() - self.taskbar_height) // 2)
+        self.__setNoneEvent()
+
+    def showUpRight(self):
+        self.setGeometry(self.__screen__.width() // 2, 0,
+                         self.__screen__.width() // 2,
+                         (self.__screen__.height() - self.taskbar_height) // 2)
+        self.__setNoneEvent()
+
+    def showDownRight(self):
+        self.setGeometry(self.__screen__.width() // 2,
+                         (self.__screen__.height() - self.taskbar_height) // 2,
+                         self.__screen__.width() // 2,
+                         (self.__screen__.height() - self.taskbar_height) // 2)
+        self.__setNoneEvent()
+
+    def showFullRight(self):
+        self.setGeometry(self.__screen__.width() // 2, 0,
+                         self.__screen__.width() // 2,
+                         self.__screen__.height() - self.taskbar_height)
+        self.__setNoneEvent()
+
+    def isMaximized(self) -> bool:
+        """自定义最大化规则"""
+        if (self.pos().x() == 0 and
+                self.pos().y() == 0 and
+                self.size().width() == self.__screen__.width() and
+                self.size().height() == self.__screen__.height() - self.taskbar_height):
+            return True
+        else:
+            return False
+
+    def __isLined(self) -> bool:
+        if self.size().height() == self.__screen__.height() - self.taskbar_height and self.pos().y() == 0:
+            return True
+        else:
+            return False
+
+    def __isFullSide(self) -> bool:
+        if self.size().width() == self.__screen__.width() // 2 and \
+                self.size().height() == self.__screen__.height() - self.taskbar_height and \
+                self.pos().y() == 0:
+            if self.pos().x() == self.__screen__.width() // 2 or \
+                    self.pos().x() == 0:
+                return True
+            else:
+                return False
+        else:
+            return False
+
+    def __isFullCorner(self) -> bool:
+        result = True
+        if (self.size().width() != self.__screen__.width() // 2 or self.size().height() != (
+                self.__screen__.height() - self.taskbar_height) // 2) and \
+                (self.pos().x() <= 5 or self.pos().x() != self.__screen__.width() // 2) and \
+                (self.pos().y() <= 5 or self.pos().y() != (self.__screen__.height() - self.taskbar_height) // 2):
+            result = False
+        return result
+
+    def __titleDoubleClickedEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton:
-            if self.isMaximized() or self.isLined() or self.isFullCorner() or self.isFullSide():
+            if self.isMaximized() or self.__isLined() or self.__isFullCorner() or self.__isFullSide():
                 self.showNormal()
+                self.__parent__.startMenuHideEvent()
             else:
                 self.showMaximized()
+                self.__parent__.startMenuHideEvent()
 
-    def setMoveableArea(self):
+    def __setWindowTitleBar(self,
+                            background_color_rgba: tuple[int] | list[int] | set[int] = (0, 0, 0, 1),
+                            color_rgba: tuple[int] | list[int] | set[int] = (255, 255, 255, 1),
+                            title_height: int = 35):
+        try:
+            self.title
+        except:
+            self.title = ""
+        self.title_height = title_height
+        self.WindowTitleBackground = QPushButton(self)
+        self.WindowTitleBackground.setStyleSheet("QPushButton {"
+                                                 f"background-color: rgba({background_color_rgba[0]}, {background_color_rgba[1]}, {background_color_rgba[2]}, {background_color_rgba[3]});"
+                                                 "border: none;"
+                                                 "}")
+        self.WindowTitleBackground.setGeometry(0, 0, self.__screen__.width(), title_height)
+        self.WindowTitleBar = QPushButton("           " + self.title, self)
+        self.WindowTitleBar.setGeometry(0, 0, self.size().width(), title_height)
+        self.WindowTitleBar.setStyleSheet("QPushButton {"
+                                          "text-align: left;"
+                                          'font: normal normal 15px "微软雅黑";'
+                                          f"background-color: rgba(0,0,0,0);"
+                                          f"color: rgba({color_rgba[0]}, {color_rgba[1]}, {color_rgba[2]}, {color_rgba[3]});"
+                                          "border: none;"
+                                          "}")
+        self.__setMoveableArea()
+
+    def __setMinimumButton(self):
+        self.MinimumButton = QPushButton("—", self)
+        self.MinimumButton.setStyleSheet("QPushButton {"
+                                         "background-color: rgba(25, 25, 25, 0);"
+                                         f"color: rgba({self.minimum_color[0]}, {self.minimum_color[1]}, {self.minimum_color[2]}, 1);"
+                                         "border: none;"
+                                         "}"
+                                         "QPushButton:hover {"
+                                         f"background-color: rgba({self.button_hovered_color[0]},{self.button_hovered_color[1]}, {self.button_hovered_color[2]}, 1);"
+                                         f"color: rgba({self.minimum_color[0]}, {self.minimum_color[1]}, {self.minimum_color[2]}, 1);"
+                                         "}")
+        self.MinimumButton.resize(self.title_height, self.title_height)
+        self.MinimumButton.move(self.MaximumButton.pos().x() - self.MinimumButton.size().width(), 0)
+        self.MinimumButton.clicked.connect(self.showMinimized)
+
+    def __setMaximumButton(self):
+        self.MaximumButton = QPushButton(self)
+        self.MaximumButton.setIcon(QIcon(f"Starts/UIstart/desktopimage/{self.theme}/max.png"))
+        self.MaximumButton.setIconSize(QSize(self.title_height - 20, self.title_height - 20))
+        self.MaximumButton.resize(self.title_height, self.title_height)
+        self.MaximumButton.setStyleSheet("QPushButton {"
+                                         f"background-color: rgba(0, 0, 0, 0);"
+                                         "color: rgba(255,255,255,1);"
+                                         "border: none;"
+                                         "}"
+                                         "QPushButton:hover{"
+                                         f"background-color: rgba({self.button_hovered_color[0]},{self.button_hovered_color[1]}, {self.button_hovered_color[2]}, 1);"
+                                         "color: rgba(255,255,255,1);"
+                                         "}")
+        self.MaximumButton.move(self.CloseButton.pos().x() - self.MaximumButton.size().width(), 0)
+        self.MaximumButton.clicked.connect(self.MaximumButtonClickedEvent)
+
+    def __setCloseButton(self):
+        self.CloseButton = QPushButton(self)
+        self.CloseButton.resize(self.title_height, self.title_height)
+        self.CloseButton.setIcon(QIcon(f"Starts/UIstart/desktopimage/{self.theme}/close.png"))
+        self.CloseButton.setIconSize(QSize(self.title_height - 20, self.title_height - 20))
+        self.CloseButton.setStyleSheet("QPushButton {"
+                                       "background-color: rgba(25, 25, 25, 0);"
+                                       "color: rgba(255,255,255,1);"
+                                       "border: none;"
+                                       "}"
+                                       "QPushButton:hover {"
+                                       "background-color: rgba(250, 0, 0, 1);"
+                                       f"icon: url('Starts/UIstart/desktopimage/{self.theme}/closeHover.png');"
+                                       "color: rgba(255,255,255,1);"
+                                       "}")
+        self.CloseButton.move(self.size().width() - self.CloseButton.size().width(), 0)
+        self.CloseButton.raise_()
+        self.CloseButton.clicked.connect(self.close)
+
+    def __setThreeButton(self):
+        self.__setCloseButton()
+        self.__setMaximumButton()
+        self.__setMinimumButton()
+
+    def MaximumButtonClickedEvent(self):
+        if self.isMaximized():
+            self.showNormal()
+        else:
+            self.showMaximized()
+
+    def __setMoveableArea(self):
         self.MoveableArea = QPushButton(self)
         self.MoveableArea.setStyleSheet("QPushButton {"
                                         "background-color: rgba(255,255,255,0);"
                                         "border: none;"
                                         "}")
         self.MoveableArea.setGeometry(0, 0, self.size().width(), self.title_height)
-        self.MoveableArea.mousePressEvent = self.movePressEvent
-        self.MoveableArea.mouseMoveEvent = self.moveMoveEvent
-        self.MoveableArea.mouseReleaseEvent = self.moveReleaseEvent
-        self.MoveableArea.mouseDoubleClickEvent = self.titleDoubleClickedEvent
-        self.setToUpArea()
+        self.MoveableArea.mousePressEvent = self.__movePressEvent
+        self.MoveableArea.mouseMoveEvent = self.__moveMoveEvent
+        self.MoveableArea.mouseReleaseEvent = self.__moveReleaseEvent
+        self.MoveableArea.mouseDoubleClickEvent = self.__titleDoubleClickedEvent
+        self.__setToUpArea()
 
-    def setToUpArea(self):
+    def __setToUpArea(self):
         self.ToUpArea = QPushButton(self.MoveableArea)
         self.ToUpArea.setStyleSheet("QPushButton {"
                                     "background-color: rgba(255,255,255,0);"
@@ -316,12 +445,12 @@ class FrameLessWindow(QPushButton):
                                     "}")
         self.ToUpArea.setGeometry(0, 0, self.size().width(), self.edge)
         self.ToUpArea.setCursor(Qt.CursorShape.SizeVerCursor)
-        self.ToUpArea.mouseMoveEvent = self.toUpMoveEvent
-        self.ToUpArea.mousePressEvent = self.toUpPressEvent
-        self.ToUpArea.mouseReleaseEvent = self.toUpReleaseEvent
-        self.setToDownArea()
+        self.ToUpArea.mouseMoveEvent = self.__toUpMoveEvent
+        self.ToUpArea.mousePressEvent = self.__toUpPressEvent
+        self.ToUpArea.mouseReleaseEvent = self.__toUpReleaseEvent
+        self.__setToDownArea()
 
-    def setToDownArea(self):
+    def __setToDownArea(self):
         self.ToDownArea = QPushButton(self)
         self.ToDownArea.setStyleSheet("QPushButton {"
                                       "background-color: rgba(255,255,255,0);"
@@ -329,12 +458,12 @@ class FrameLessWindow(QPushButton):
                                       "}")
         self.ToDownArea.setGeometry(0, self.size().height() - self.edge, self.size().width(), self.edge)
         self.ToDownArea.setCursor(Qt.CursorShape.SizeVerCursor)
-        self.ToDownArea.mouseMoveEvent = self.toDownMoveEvent
-        self.ToDownArea.mousePressEvent = self.toDownPressEvent
-        self.ToDownArea.mouseReleaseEvent = self.toDownReleaseEvent
-        self.setToLeftArea()
+        self.ToDownArea.mouseMoveEvent = self.__toDownMoveEvent
+        self.ToDownArea.mousePressEvent = self.__toDownPressEvent
+        self.ToDownArea.mouseReleaseEvent = self.__toDownReleaseEvent
+        self.__setToLeftArea()
 
-    def setToLeftArea(self):
+    def __setToLeftArea(self):
         self.ToLeftArea = QPushButton(self)
         self.ToLeftArea.setStyleSheet("QPushButton {"
                                       "background-color: rgba(255,255,255,0);"
@@ -342,12 +471,12 @@ class FrameLessWindow(QPushButton):
                                       "}")
         self.ToLeftArea.setGeometry(0, 0, self.edge, self.size().height())
         self.ToLeftArea.setCursor(Qt.CursorShape.SizeHorCursor)
-        self.ToLeftArea.mouseMoveEvent = self.toLeftMoveEvent
-        self.ToLeftArea.mousePressEvent = self.toLeftPressEvent
-        self.ToLeftArea.mouseReleaseEvent = self.toLeftReleaseEvent
-        self.setToRightArea()
+        self.ToLeftArea.mouseMoveEvent = self.__toLeftMoveEvent
+        self.ToLeftArea.mousePressEvent = self.__toLeftPressEvent
+        self.ToLeftArea.mouseReleaseEvent = self.__toLeftReleaseEvent
+        self.__setToRightArea()
 
-    def setToRightArea(self):
+    def __setToRightArea(self):
         self.ToRightArea = QPushButton(self)
         self.ToRightArea.setStyleSheet("QPushButton {"
                                        "background-color: rgba(255,255,255,0);"
@@ -355,47 +484,49 @@ class FrameLessWindow(QPushButton):
                                        "}")
         self.ToRightArea.setGeometry(self.size().width() - self.edge, 0, self.edge, self.size().height())
         self.ToRightArea.setCursor(Qt.CursorShape.SizeHorCursor)
-        self.ToRightArea.mouseMoveEvent = self.toRightMoveEvent
-        self.ToRightArea.mousePressEvent = self.toRightPressEvent
-        self.ToRightArea.mouseReleaseEvent = self.toRightReleaseEvent
-        self.setUpLeftArea()
+        self.ToRightArea.mouseMoveEvent = self.__toRightMoveEvent
+        self.ToRightArea.mousePressEvent = self.__toRightPressEvent
+        self.ToRightArea.mouseReleaseEvent = self.__toRightReleaseEvent
+        self.__setUpLeftArea()
 
-    def toRightPressEvent(self, event: QMouseEvent):
+    def __toRightPressEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton:
             self.right_click_position = event.globalPosition().toPoint() - self.pos()
             self.beginning_pos_x = QCursor.pos().x()
             self.toRightPress = True
             self._width_ = self.size().width()
+            self.__parent__.startMenuHideEvent()
 
-    def toRightMoveEvent(self, event: QMouseEvent):
+    def __toRightMoveEvent(self, event: QMouseEvent):
         if self.toRightPress and QCursor.pos().x() >= self.pos().x() + self.minimumWidth() - self.edge:
             self.resize(self._width_ + (QCursor.pos().x() - self.beginning_pos_x), self.size().height())
         event.accept()
 
-    def toRightReleaseEvent(self, event: QMouseEvent):
+    def __toRightReleaseEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton:
             self.toRightPress = False
             self.normal_geometry = QRect(self.pos().x(), self.pos().y(), self.size().width(), self.size().height())
         event.accept()
 
-    def movePressEvent(self, event: QMouseEvent):
+    def __movePressEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton and \
                 event.position().y() <= self.title_height:
             self.is_mouse_pressed = True
             self.mouse_click_position = event.globalPosition().toPoint() - self.pos()
             if self.isMaximized():
                 self.movemode = 1
-            elif self.isFullSide():
+            elif self.__isFullSide():
                 self.movemode = 3
-            elif self.isFullCorner():
+            elif self.__isFullCorner():
                 self.movemode = 4
-            elif self.isLined():
+            elif self.__isLined():
                 self.movemode = 2
             else:
                 self.movemode = 0
         event.accept()
+        self.__parent__.startMenuHideEvent()
 
-    def moveMoveEvent(self, event: QMouseEvent):
+    def __moveMoveEvent(self, event: QMouseEvent):
         if self.is_mouse_pressed:
             if self.movemode == 0:
                 self.move(event.globalPosition().toPoint() - self.mouse_click_position)
@@ -403,7 +534,7 @@ class FrameLessWindow(QPushButton):
                 self.showSizeNormal()
                 self.move(
                     event.globalPosition().toPoint().x() - self.mouse_click_position.x() * self.normal_geometry.width() // (
-                            QGuiApplication.primaryScreen().size().width() // 2),
+                            self.__screen__.width() // 2),
                     (event.globalPosition().toPoint() - self.mouse_click_position).y())
             elif self.movemode == 1:
                 self.showSizeNormal()
@@ -414,14 +545,15 @@ class FrameLessWindow(QPushButton):
                 self.showSizeNormal()
                 self.move(
                     event.globalPosition().toPoint().x() - self.mouse_click_position.x() * self.normal_geometry.width() // (
-                            QGuiApplication.primaryScreen().size().width() // 2),
+                            self.__screen__.width() // 2),
                     (event.globalPosition().toPoint() - self.mouse_click_position).y())
             elif self.movemode == 2:
                 self.showSizeNormal()
                 self.move(event.globalPosition().toPoint() - self.mouse_click_position)
+
         event.accept()
 
-    def moveReleaseEvent(self, event: QMouseEvent):
+    def __moveReleaseEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton:
             self.is_mouse_pressed = False
             if QCursor.pos().y() <= 0 and self.__screen__.width() - 5 > QCursor.pos().x() > 5:
@@ -430,9 +562,9 @@ class FrameLessWindow(QPushButton):
                 self.showUpLeft()
             elif QCursor.pos().x() >= self.__screen__.width() - 5 and QCursor.pos().y() <= 5:
                 self.showUpRight()
-            elif QCursor.pos().x() <= 5 and QCursor.pos().y() >= self.__screen__.height() - 50:
+            elif QCursor.pos().x() <= 5 and QCursor.pos().y() >= self.__screen__.height() - self.taskbar_height:
                 self.showDownLeft()
-            elif QCursor.pos().y() >= self.__screen__.height() - 50 and \
+            elif QCursor.pos().y() >= self.__screen__.height() - self.taskbar_height and \
                     QCursor.pos().x() >= self.__screen__.width() - 5:
                 self.showDownRight()
             elif QCursor.pos().x() <= 5 <= QCursor.pos().y() <= self.__screen__.height() - 5:
@@ -440,11 +572,14 @@ class FrameLessWindow(QPushButton):
             elif QCursor.pos().x() >= self.__screen__.width() - 5 and \
                     self.__screen__.height() - 5 >= QCursor.pos().y() >= 5:
                 self.showFullRight()
-            elif not (self.isMaximized() or self.isLined() or self.isFullSide() or self.isFullCorner()):
+            elif QCursor.pos().y() >= self.__screen__.height() - self.taskbar_height and 5 <= QCursor.pos().x() <= self.__screen__.width() - 5:
+                self.setGeometry(self.normal_geometry.x(), self.normal_geometry.y(), self.normal_geometry.width(),
+                                 self.normal_geometry.height())
+            elif not (self.isMaximized() or self.__isLined() or self.__isFullSide() or self.__isFullCorner()):
                 self.normal_geometry = QRect(self.pos().x(), self.pos().y(), self.size().width(), self.size().height())
         event.accept()
 
-    def toUpPressEvent(self, event: QMouseEvent):
+    def __toUpPressEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton and \
                 event.position().y() <= self.edge:
             self.up_resized = True
@@ -456,14 +591,15 @@ class FrameLessWindow(QPushButton):
             self.beginning_pos_y = QCursor().pos().y()
             self.justnow_size_list = []
         event.accept()
+        self.__parent__.startMenuHideEvent()
 
-    def toUpMoveEvent(self, event: QMouseEvent):
+    def __toUpMoveEvent(self, event: QMouseEvent):
         if self.up_resized and self.size().height() + self.pos().y() - QCursor.pos().y() >= self.minimumHeight():
             self.resize(self._width_, self._height_ - QCursor.pos().y() + self.beginning_pos_y)
             self.move(self._x_, (event.globalPosition().toPoint() - self.up_click_position).y())
         event.accept()
 
-    def toUpReleaseEvent(self, event: QMouseEvent):
+    def __toUpReleaseEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton:
             self.up_resized = False
             if QCursor.pos().y() <= 0 and QGuiApplication.primaryScreen().geometry().width() - 5 > QCursor.pos().x() > 5:
@@ -472,29 +608,30 @@ class FrameLessWindow(QPushButton):
                 self.normal_geometry = QRect(self.pos().x(), self.pos().y(), self.size().width(), self.size().height())
         event.accept()
 
-    def toDownPressEvent(self, event: QMouseEvent):
+    def __toDownPressEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton:
             self.down_click_position = event.globalPosition().toPoint() - self.pos()
             self.beginning_pos_y = QCursor.pos().y()
             self._height_ = self.size().height()
             self.toDownPress = True
+        self.__parent__.startMenuHideEvent()
 
-    def toDownMoveEvent(self, event: QMouseEvent):
+    def __toDownMoveEvent(self, event: QMouseEvent):
         if self.toDownPress and QCursor.pos().y() >= self.minimumHeight() + self.pos().y():
             self.resize(self.size().width(), self._height_ + (QCursor.pos().y() - self.beginning_pos_y))
         event.accept()
 
-    def toDownReleaseEvent(self, event: QMouseEvent):
+    def __toDownReleaseEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton:
             self.toDownPress = False
-            if QCursor.pos().y() >= self.__screen__.height() - 50 and \
+            if QCursor.pos().y() >= self.__screen__.height() - self.taskbar_height and \
                     5 <= QCursor.pos().x() <= self.__screen__.width() - self.edge:
                 self.showLined()
             else:
                 self.normal_geometry = QRect(self.pos().x(), self.pos().y(), self.size().width(), self.size().height())
         event.accept()
 
-    def toLeftPressEvent(self, event: QMouseEvent):
+    def __toLeftPressEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton and \
                 event.position().x() <= self.edge:
             self.left_resized = True
@@ -505,20 +642,21 @@ class FrameLessWindow(QPushButton):
             self._height_ = self.size().height()
             self.beginning_pos_x = QCursor().pos().x()
         event.accept()
+        self.__parent__.startMenuHideEvent()
 
-    def toLeftMoveEvent(self, event: QMouseEvent):
+    def __toLeftMoveEvent(self, event: QMouseEvent):
         if self.left_resized and self.pos().x() + self.size().width() - QCursor.pos().x() >= self.minimumWidth():
             self.resize(self._width_ - QCursor.pos().x() + self.beginning_pos_x, self.height())
             self.move((event.globalPosition().toPoint() - self.left_click_position).x(), self._y_)
         event.accept()
 
-    def toLeftReleaseEvent(self, event: QMouseEvent):
+    def __toLeftReleaseEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton:
             self.left_resized = False
             self.normal_geometry = QRect(self.pos().x(), self.pos().y(), self.size().width(), self.size().height())
         event.accept()
 
-    def setUpLeftArea(self):
+    def __setUpLeftArea(self):
         self.UpLeftArea = QPushButton(self)
         self.UpLeftArea.setStyleSheet("QPushButton {"
                                       "background-color: rgba(255,255,255,0);"
@@ -526,12 +664,12 @@ class FrameLessWindow(QPushButton):
                                       "}")
         self.UpLeftArea.setGeometry(0, 0, self.edge, self.edge)
         self.UpLeftArea.setCursor(Qt.CursorShape.SizeFDiagCursor)
-        self.UpLeftArea.mouseMoveEvent = self.UpLeftMoveEvent
-        self.UpLeftArea.mousePressEvent = self.UpLeftPressEvent
-        self.UpLeftArea.mouseReleaseEvent = self.UpLeftReleaseEvent
-        self.setUpRightArea()
+        self.UpLeftArea.mouseMoveEvent = self.__UpLeftMoveEvent
+        self.UpLeftArea.mousePressEvent = self.__UpLeftPressEvent
+        self.UpLeftArea.mouseReleaseEvent = self.__UpLeftReleaseEvent
+        self.__setUpRightArea()
 
-    def UpLeftPressEvent(self, event: QMouseEvent):
+    def __UpLeftPressEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton:
             self.upleft_resized = True
             self.upleft_click_position = event.globalPosition().toPoint() - self.pos()
@@ -541,8 +679,9 @@ class FrameLessWindow(QPushButton):
             self._height_ = self.size().height()
             self.beginning_pos = QCursor().pos()
         event.accept()
+        self.__parent__.startMenuHideEvent()
 
-    def UpLeftMoveEvent(self, event: QMouseEvent):
+    def __UpLeftMoveEvent(self, event: QMouseEvent):
         if self.upleft_resized and \
                 self.pos().x() + self.size().width() - QCursor.pos().x() >= self.minimumWidth():
             self.resize(self._width_ - QCursor.pos().x() + self.beginning_pos.x(),
@@ -555,13 +694,13 @@ class FrameLessWindow(QPushButton):
             self.move(self.pos().x(), (event.globalPosition().toPoint() - self.upleft_click_position).y())
         event.accept()
 
-    def UpLeftReleaseEvent(self, event: QMouseEvent):
+    def __UpLeftReleaseEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton:
             self.upleft_resized = False
             self.normal_geometry = QRect(self.pos().x(), self.pos().y(), self.size().width(), self.size().height())
         event.accept()
 
-    def setUpRightArea(self):
+    def __setUpRightArea(self):
         self.UpRightArea = QPushButton(self)
         self.UpRightArea.setStyleSheet("QPushButton {"
                                        "background-color: rgba(255,255,255,0);"
@@ -569,12 +708,12 @@ class FrameLessWindow(QPushButton):
                                        "}")
         self.UpRightArea.setGeometry(self.size().width() - self.edge, 0, self.edge, self.edge)
         self.UpRightArea.setCursor(Qt.CursorShape.SizeBDiagCursor)
-        self.UpRightArea.mouseMoveEvent = self.UpRightMoveEvent
-        self.UpRightArea.mousePressEvent = self.UpRightPressEvent
-        self.UpRightArea.mouseReleaseEvent = self.UpRightReleaseEvent
-        self.setDownRightArea()
+        self.UpRightArea.mouseMoveEvent = self.__UpRightMoveEvent
+        self.UpRightArea.mousePressEvent = self.__UpRightPressEvent
+        self.UpRightArea.mouseReleaseEvent = self.__UpRightReleaseEvent
+        self.__setDownRightArea()
 
-    def UpRightPressEvent(self, event: QMouseEvent):
+    def __UpRightPressEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton:
             self.upright_resized = True
             self.upleft_click_position = event.globalPosition().toPoint() - self.pos()
@@ -585,8 +724,9 @@ class FrameLessWindow(QPushButton):
             self.beginning_pos_right = QCursor().pos()
             self.beginning_pos_up = QCursor().pos()
         event.accept()
+        self.__parent__.startMenuHideEvent()
 
-    def UpRightMoveEvent(self, event: QMouseEvent):
+    def __UpRightMoveEvent(self, event: QMouseEvent):
         if self.upright_resized and QCursor.pos().x() >= self.pos().x() + self.minimumWidth() - self.edge:
             self.resize(self._width_ + (QCursor.pos().x() - self.beginning_pos_right.x()), self.size().height())
         if self.upright_resized and self.pos().y() + self.size().height() - QCursor.pos().y() >= self.minimumHeight():
@@ -594,13 +734,13 @@ class FrameLessWindow(QPushButton):
             self.move(self._x_, (event.globalPosition().toPoint() - self.upleft_click_position).y())
         event.accept()
 
-    def UpRightReleaseEvent(self, event: QMouseEvent):
+    def __UpRightReleaseEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton:
             self.upright_resized = False
             self.normal_geometry = QRect(self.pos().x(), self.pos().y(), self.size().width(), self.size().height())
         event.accept()
 
-    def setDownRightArea(self):
+    def __setDownRightArea(self):
         self.DownRightArea = QPushButton(self)
         self.DownRightArea.setStyleSheet("QPushButton {"
                                          "background-color: rgba(255,255,255,0);"
@@ -609,12 +749,12 @@ class FrameLessWindow(QPushButton):
         self.DownRightArea.setGeometry(self.size().width() - self.edge, self.size().height() - self.edge, self.edge,
                                        self.edge)
         self.DownRightArea.setCursor(Qt.CursorShape.SizeFDiagCursor)
-        self.DownRightArea.mouseMoveEvent = self.DownRightMoveEvent
-        self.DownRightArea.mousePressEvent = self.DownRightPressEvent
-        self.DownRightArea.mouseReleaseEvent = self.DownRightReleaseEvent
-        self.setDownLeftArea()
+        self.DownRightArea.mouseMoveEvent = self.__DownRightMoveEvent
+        self.DownRightArea.mousePressEvent = self.__DownRightPressEvent
+        self.DownRightArea.mouseReleaseEvent = self.__DownRightReleaseEvent
+        self.__setDownLeftArea()
 
-    def DownRightPressEvent(self, event: QMouseEvent):
+    def __DownRightPressEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton:
             self.downright_resized = True
             self.upleft_click_position = event.globalPosition().toPoint() - self.pos()
@@ -625,8 +765,9 @@ class FrameLessWindow(QPushButton):
             self.beginning_pos_right = QCursor().pos()
             self.beginning_pos_down = QCursor().pos()
         event.accept()
+        self.__parent__.startMenuHideEvent()
 
-    def DownRightMoveEvent(self, event: QMouseEvent):
+    def __DownRightMoveEvent(self, event: QMouseEvent):
         if self.downright_resized and (
                 event.globalPosition().toPoint() - self.pos()).y() >= self.minimumHeight() - self.edge:
             self.resize(self.size().width(), self._height_ + (QCursor.pos().y() - self.beginning_pos_down.y()))
@@ -634,13 +775,13 @@ class FrameLessWindow(QPushButton):
             self.resize(self._width_ + (QCursor.pos().x() - self.beginning_pos_right.x()), self.size().height())
         event.accept()
 
-    def DownRightReleaseEvent(self, event: QMouseEvent):
+    def __DownRightReleaseEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton:
             self.downright_resized = False
             self.normal_geometry = QRect(self.pos().x(), self.pos().y(), self.size().width(), self.size().height())
         event.accept()
 
-    def setDownLeftArea(self):
+    def __setDownLeftArea(self):
         self.DownLeftArea = QPushButton(self)
         self.DownLeftArea.setStyleSheet("QPushButton {"
                                         "background-color: rgba(255,255,255,0);"
@@ -649,11 +790,11 @@ class FrameLessWindow(QPushButton):
         self.DownLeftArea.setGeometry(0, self.size().height() - self.edge, self.edge,
                                       self.edge)
         self.DownLeftArea.setCursor(Qt.CursorShape.SizeBDiagCursor)
-        self.DownLeftArea.mouseMoveEvent = self.DownLeftMoveEvent
-        self.DownLeftArea.mousePressEvent = self.DownLeftPressEvent
-        self.DownLeftArea.mouseReleaseEvent = self.DownLeftReleaseEvent
+        self.DownLeftArea.mouseMoveEvent = self.__DownLeftMoveEvent
+        self.DownLeftArea.mousePressEvent = self.__DownLeftPressEvent
+        self.DownLeftArea.mouseReleaseEvent = self.__DownLeftReleaseEvent
 
-    def DownLeftPressEvent(self, event: QMouseEvent):
+    def __DownLeftPressEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton:
             self.downleft_resized = True
             self.upleft_click_position = event.globalPosition().toPoint() - self.pos()
@@ -664,8 +805,9 @@ class FrameLessWindow(QPushButton):
             self.beginning_pos_left = QCursor().pos()
             self.beginning_pos_down = QCursor().pos()
         event.accept()
+        self.__parent__.startMenuHideEvent()
 
-    def DownLeftMoveEvent(self, event: QMouseEvent):
+    def __DownLeftMoveEvent(self, event: QMouseEvent):
         if self.downleft_resized and (
                 event.globalPosition().toPoint() - self.pos()).y() >= self.minimumHeight() - self.edge:
             self.resize(self.size().width(), self._height_ + (QCursor.pos().y() - self.beginning_pos_down.y()))
@@ -674,8 +816,16 @@ class FrameLessWindow(QPushButton):
             self.move((event.globalPosition().toPoint() - self.upleft_click_position).x(), self._y_)
         event.accept()
 
-    def DownLeftReleaseEvent(self, event: QMouseEvent):
+    def __DownLeftReleaseEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton:
             self.downleft_resized = False
             self.normal_geometry = QRect(self.pos().x(), self.pos().y(), self.size().width(), self.size().height())
         event.accept()
+
+    def close(self):
+        super().close()
+        self.__parent__.tasklist.remove("设置")
+
+    def windowClickedEvent(self):
+        self.raise_()
+        self.__parent__.startMenuHideEvent()
