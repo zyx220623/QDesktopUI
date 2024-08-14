@@ -29,7 +29,7 @@ class FrameLessWindow(QPushButton):
         elif self.theme == "light":
             self.button_hovered_color = [230, 230, 230, 1]
             self.minimum_color = [0, 0, 0, 1]
-            self.title_background_color_rgba = [255, 255, 255, 1]
+            self.title_background_color_rgba = [255, 255, 255, 0.5]
             self.title_text_color_rgba = [0, 0, 0, 1]
             self.__background_color_rgba = [255, 255, 255, 0.86]
 
@@ -55,6 +55,7 @@ class FrameLessWindow(QPushButton):
 
     def __init__(self, appname: str = None, apphandle: int = None, parent: QWidget = None,
                  background_color_rgba: list[int] | tuple[int] | set[int] = (255, 255, 255, 0.9),
+                 iconyes: bool = True,
                  taskbar_height: int = 50,
                  MinimumSize: QSize = QSize(400, 225),
                  ReSize: QSize = QSize(400, 225),
@@ -68,12 +69,13 @@ class FrameLessWindow(QPushButton):
         self.resize(ReSize)
         self.taskbar_height = taskbar_height
         self.appname = appname
+        self.iconyes = iconyes
         self.apphandle = apphandle
         self.background_color_rgba = background_color_rgba
         if themeBackground:
             self.background_color_rgba = self.__background_color_rgba
         self.setStyleSheet("QPushButton {"
-                           f"background-color: rgba({background_color_rgba[0]},{background_color_rgba[1]},{background_color_rgba[2]},{background_color_rgba[3]});"
+                           f"background-color:rgba({self.background_color_rgba[0]}, {self.background_color_rgba[1]}, {self.background_color_rgba[2]}, {self.background_color_rgba[3]});"
                            "border: none;"
                            "}")
         self.title_height = title_height
@@ -94,19 +96,20 @@ class FrameLessWindow(QPushButton):
                                  title_height=self.title_height)
 
     def setWindowIcon(self, icon: QIcon | QPixmap):
-        self.__icon__ = icon
-        self.icon_image = QPushButton(self)
-        self.icon_image.setIcon(icon)
-        self.icon_image.setIconSize(QSize(self.title_height - 10, self.title_height - 10))
-        self.icon_image.setFixedSize(self.title_height - 10, self.title_height - 10)
-        self.icon_image.move(5, 5)
-        self.icon_image.setStyleSheet("QPushButton {"
-                                      "background-color: rgba(0,0,0,0);"
-                                      "border: none;"
-                                      "}")
+        if self.iconyes:
+            self.__icon__ = icon
+            self.icon_image = QPushButton(self)
+            self.icon_image.setIcon(icon)
+            self.icon_image.setIconSize(QSize(self.title_height - 10, self.title_height - 10))
+            self.icon_image.setFixedSize(self.title_height - 10, self.title_height - 10)
+            self.icon_image.move(5, 5)
+            self.icon_image.setStyleSheet("QPushButton {"
+                                          "background-color: rgba(0,0,0,0);"
+                                          "border: none;"
+                                          "}")
 
     def resizeEvent(self, event):
-        self.WindowTitleBar.setGeometry(0, 0, self.size().width(), 35)
+        self.WindowTitleBar.setGeometry(self.edge * 3, 0, self.size().width(), 35)
         self.MoveableArea.setGeometry(0, 0, self.size().width(), self.title_height)
         self.ToUpArea.setGeometry(0, 0, self.size().width(), self.edge)
         self.ToDownArea.setGeometry(0, self.size().height() - self.edge, self.size().width(), self.edge)
@@ -124,19 +127,27 @@ class FrameLessWindow(QPushButton):
         self.CloseButton.move(self.size().width() - self.CloseButton.size().width(), 0)
         self.MaximumButton.move(self.CloseButton.pos().x() - self.MaximumButton.size().width(), 0)
         self.MinimumButton.move(self.MaximumButton.pos().x() - self.MinimumButton.size().width(), 0)
+        self.WindowTitleBackground.raise_()
+        self.WindowTitleBar.raise_()
+        self.MoveableArea.raise_()
         self.CloseButton.raise_()
         self.MaximumButton.raise_()
         self.MinimumButton.raise_()
         self.ToUpArea.raise_()
         self.ToRightArea.raise_()
+        self.ToDownArea.raise_()
+        self.ToLeftArea.raise_()
         self.UpRightArea.raise_()
         self.DownRightArea.raise_()
+        self.UpLeftArea.raise_()
+        self.DownLeftArea.raise_()
 
     def __setMainWidget(self):
         self.main_widget = QPushButton(self)
         self.main_widget.setStyleSheet("QPushButton {"
                                        "border: none;"
-                                       "background-color: rgba(0, 0, 0, 0);"
+                                       f"background-color: rgba({self.background_color_rgba[0]}, {self.background_color_rgba[1]}, {self.background_color_rgba[2]}, 0);"
+                                       "border: none;"
                                        "}")
         self.main_widget.setGeometry(self.edge,
                                      self.title_height,
@@ -237,6 +248,9 @@ class FrameLessWindow(QPushButton):
         self.MaximumButton.setIcon(QIcon(f"Starts/UIstart/desktopimage/{self.theme}/normal.png"))
         self.setGeometry(0, 0, self.__screen__.width(), self.__screen__.height() - self.taskbar_height)
         self.__setNoneEvent()
+
+    def showMinimized(self):
+        pass
 
     def showLined(self):
         self.setGeometry(self.pos().x(), 0, self.size().width(), self.__screen__.height() - self.taskbar_height)
@@ -351,11 +365,14 @@ class FrameLessWindow(QPushButton):
                                                  "border: none;"
                                                  "}")
         self.WindowTitleBackground.setGeometry(0, 0, self.__screen__.width(), title_height)
-        self.WindowTitleBar = QPushButton("           " + self.title, self)
-        self.WindowTitleBar.setGeometry(0, 0, self.size().width(), title_height)
+        if self.iconyes:
+            self.WindowTitleBar = QPushButton("          " + self.title, self)
+        else:
+            self.WindowTitleBar = QPushButton(self.title, self)
+        self.WindowTitleBar.setGeometry(self.edge, 0, self.size().width(), title_height)
         self.WindowTitleBar.setStyleSheet("QPushButton {"
                                           "text-align: left;"
-                                          'font: normal normal 15px "微软雅黑";'
+                                          'font: normal normal 18px "微软雅黑";'
                                           f"background-color: rgba(0,0,0,0);"
                                           f"color: rgba({color_rgba[0]}, {color_rgba[1]}, {color_rgba[2]}, {color_rgba[3]});"
                                           "border: none;"

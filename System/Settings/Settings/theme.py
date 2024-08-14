@@ -1,1 +1,1 @@
-THEME = "dark"
+THEME = "light"
