@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (QMainWindow,
                                QDialog,
                                QApplication,
                                QPushButton,
-                               QMenu)
+                               QMenu, QScrollArea)
 from os import system
 from System.Settings.settings import Settings
 from System.Settings.Settings.theme import THEME
@@ -128,7 +128,7 @@ class Desktop(QMainWindow):
                                      "}")
 
         self.startmenu_button_qss = ("QPushButton {"
-                                     "background-color: rgba(40,40,40,0.9);"
+                                     "background-color: rgba(40,40,40,0);"
                                      'font: normal normal 15px "微软雅黑";'
                                      "color: rgb(255,255,255);"
                                      "border: none;"
@@ -148,6 +148,33 @@ class Desktop(QMainWindow):
         self.setting_button.move(0, self.shutdown_button.pos().y() - self.setting_button.size().height())
         self.setting_button.setStyleSheet(self.startmenu_button_qss)
         self.setting_button.clicked.connect(settingButtonClickedEvent)
+        self.applist_init()
+
+    def applist_init(self):
+        self.applist_area = QScrollArea(self.startmenu)
+        self.applist_area.setGeometry(self.setting_button.size().width() + 10,
+                                      10, self.startmenu.size().width() - self.setting_button.size().width() - 20,
+                                      self.startmenu.size().height() - 20
+                                      )
+        self.applist_area.setStyleSheet("background-color:rgba(0,0,0,0);border:none;")
+        self.applist = QWidget()
+        self.applist.setMinimumSize(self.applist_area.size().width() - 20,2000)
+        self.applist_area.setWidget(self.applist)
+        self.__add_apps(["QEdge"])
+
+    def __add_apps(self, apps: list[str]):
+        for i in apps:
+            app_button = QPushButton(i, self.applist)
+            app_button.setGeometry(0, apps.index(i)*40, self.applist_area.size().width()-10, 40)
+            app_button.setStyleSheet("QPushButton {"
+                                     "background-color:rgba(0,0,0,0);"
+                                     "color:rgb(255,255,255);"
+                                     "border:none;"
+                                     "}"
+                                     "QPushButton:hover {"
+                                     "background-color:rgba(200,200,200,0.8);"
+                                     "color:rgb(255,255,255);"
+                                     "}")
 
     def UIinit(self):
         self.background_init()

@@ -10,7 +10,7 @@ from PySide6.QtGui import (QPixmap,
 from PySide6.QtWidgets import (QPushButton,
                                QWidget)
 from System.Settings.Settings.theme import THEME
-
+from .switchbutton import SwitchButton
 
 class FrameLessWindow(QPushButton):
     edge: int

@@ -1,8 +1,12 @@
-from PySide6.QtCore import QSize
-from PySide6.QtWidgets import QWidget, QTabWidget, QPushButton, QLabel, QScrollArea
+from PySide6.QtCore import QSize, Qt
+from PySide6.QtWidgets import QWidget, QTabWidget, QPushButton, QLabel, QScrollArea, QHBoxLayout, QVBoxLayout, \
+    QComboBox, QListView, QLayout, QCheckBox
 
-from Starts.UIstart.windowui import FrameLessWindow
+from Starts.UIstart.windowui import FrameLessWindow, SwitchButton
 
+class _QComboBox(QComboBox):
+    def wheelEvent(self, e):
+        pass
 
 class Settings(FrameLessWindow):
     def __init__(self, parent: QWidget | None = None):
@@ -21,7 +25,6 @@ class Settings(FrameLessWindow):
         self.initUI()
         self.initLeftList()
         self.initmouseT()
-        self.__System()
 
     def resizeEvent(self, event):
         self.tabWidget.setGeometry(self.tabWidget_toLeft, 0,
@@ -36,9 +39,80 @@ class Settings(FrameLessWindow):
                            "background-color:rgba(200,200,200,0);"
                            "}")
         self.pqss_2title = ("QLabel {"
-                            'font: normal bold 23px "微软雅黑";'
+                            'font: normal normal 22px "微软雅黑";'
                             "background-color:rgba(200,200,200,0);"
                             "}")
+        self.pqss_3title = ("QLabel {"
+                            'font: normal normal 17px "微软雅黑";'
+                            "background-color:rgba(200,200,200,0);"
+                            "}")
+        self.pqss_text = ("QLabel {"
+                          'font: normal normal 13px "微软雅黑";'
+                          "background-color:rgba(200,200,200,0);"
+                          "}")
+        self.pqss_widget = "background-color:rgba(0,0,0,0);border:rgb(255,255,255);"
+        self.pqss_conmo = '''
+QComboBox
+{
+	background-color:rgba(60,60,60,0);
+	font: 75 14px "微软雅黑";
+    color:rgb(0,0,0);
+    border:0px ;
+	padding-top: 2px;
+	padding-left: 2px;
+}
+QComboBox:disabled
+{
+	background-color:rgba(50,50,50,0);
+	font: 75 13px "微软雅黑";
+    color:rgb(0,0,0);
+}
+QComboBox:hover
+{
+	background-color:rgba(45,45,45,0);
+	border:1px solid rgba(255,255,255,0) ;
+}
+QComboBox:on
+{
+	border-radius:3px;
+	background-color:rgba(255,255,255,0);
+	font: 75 12px "微软雅黑";
+    color:rgb(0,0,0);
+    border:1px solid rgba(255,255,255,0) ;
+}
+QComboBox QAbstractItemView 
+{
+    outline: 0px solid gray;
+    border: 1px solid rgba(200,200,200,0);  
+    font: 75 13px "微软雅黑";
+    color: rgb(0,0,0);
+    background-color: rgba(255,255,255,1);   
+    selection-background-color: rgb(240,240,240);   
+}
+QComboBox QAbstractItemView::item
+ { 
+	height: 25px;  
+ }
+QComboBox QAbstractItemView::item:selected 
+{
+    color: rgb(10,10,10);
+	background-color: rgb(200,200,200); 
+}
+QComboBox::drop-down 
+{
+	border:none;
+}
+QComboBox::down-arrow 
+{
+    right:10px;
+    width: 9px;  
+    height: 9px;   
+}
+QComboBox::down-arrow:on
+{
+    width: 9px;  
+    height: 9px;   
+}'''
 
     def initUI(self):
         self.tabWidget = QTabWidget(self)
@@ -69,15 +143,205 @@ QTabBar:tab:selected
 {
     background-color: rgba(200,200,200,0);
 }""")
+        self.__System()
+        self.__computer()
 
     def __System(self):
-        self.system_S = QScrollArea()
-        self.system = QWidget(self.system_S)
-        self.system_T = QLabel(" 系统", self.system)
-        self.system_T.setStyleSheet(self.pqss_title)
-        self.system_T.move(self.edge, self.edge)
-        self.system_T.resize(1000,30)
-        self.tabWidget.addTab(self.system_S, "系统")
+        self.wt = QWidget()
+        self.wt.setStyleSheet(self.pqss_widget)
+        self.sys_topFiller = QWidget()
+        # self.sys_topFiller.setMinimumSize(1000, 4500)
+        self.systemUI()
+        self.system_s = QScrollArea(self)
+        self.system_s.setWidget(self.sys_topFiller)
+        vbox = QVBoxLayout()
+        vbox.addWidget(self.system_s)
+        self.wt.setLayout(vbox)
+        self.tabWidget.addTab(self.wt, "系统")
+
+    def systemUI(self):
+        self.system_l = QVBoxLayout(self.sys_topFiller)
+        self.create_title("系统", self.pqss_title,
+                          self.sys_topFiller, self.system_l)
+        self.create_title("  屏幕", self.pqss_2title, self.sys_topFiller, self.system_l)
+        self.create_title("   缩放与布局", self.pqss_3title, self.sys_topFiller, self.system_l)
+        self.create_title("    更改应用和文本的大小", self.pqss_text, self.sys_topFiller, self.system_l)
+        self.create_conmo(["     100%（推荐）",
+                           "     125%",
+                           "     150%",
+                           "     175%",
+                           "     200%"],
+                          self.sys_topFiller,
+                          self.system_l,
+                          self.pqss_conmo,
+                          None, None)
+        self.create_title("    设置屏幕方向", self.pqss_text, self.sys_topFiller, self.system_l)
+        self.create_conmo(["     横向",
+                           "     纵向",
+                           "     横向（翻转）",
+                           "     纵向（翻转）"],
+                          self.sys_topFiller,
+                          self.system_l,
+                          self.pqss_conmo,
+                          None, None)
+        self.create_title("\n  通知和操作", self.pqss_2title, self.sys_topFiller, self.system_l)
+        self.create_title("   通知", self.pqss_3title, self.sys_topFiller, self.system_l)
+        self.create_title("    获取来自应用和其他发送者的通知", self.pqss_text, self.sys_topFiller, self.system_l)
+        self.create_conmo(["     获取所有通知",
+                           "     仅获取本地和系统通知",
+                           "     屏蔽所有通知"],
+                          self.sys_topFiller,
+                          self.system_l,
+                          self.pqss_conmo,
+                          None, None)
+        self.create_title("    在锁屏页面上显示通知", self.pqss_text, self.sys_topFiller, self.system_l)
+        self.create_conmo(["     开",
+                           "     关"],
+                          self.sys_topFiller,
+                          self.system_l,
+                          self.pqss_conmo,
+                          None, None)
+        self.create_title("    允许通知播放系统提示音", self.pqss_text, self.sys_topFiller, self.system_l)
+        self.create_conmo(["     开",
+                           "     关"],
+                          self.sys_topFiller,
+                          self.system_l,
+                          self.pqss_conmo,
+                          None, None)
+        self.create_title("\n  电源和睡眠", self.pqss_2title, self.sys_topFiller, self.system_l)
+        self.create_title("   电源", self.pqss_3title, self.sys_topFiller, self.system_l)
+        self.create_title("    在接通电源且无任何操作的情况下，电脑经过以下时间后关闭：", self.pqss_text, self.sys_topFiller, self.system_l)
+        self.create_conmo(["     从不",
+                           "     30 分钟",
+                           "     1 小时",
+                           "     2 小时",
+                           "     3 小时",
+                           "     4 小时",
+                           "     5 小时",
+                           "     6 小时"],
+                          self.sys_topFiller,
+                          self.system_l,
+                          self.pqss_conmo,
+                          None, None)
+        self.create_title("   屏幕", self.pqss_3title, self.sys_topFiller, self.system_l)
+        self.create_title("    在接通电源且无任何操作的情况下，显示器经过以下时间后熄屏：", self.pqss_text, self.sys_topFiller, self.system_l)
+        self.create_conmo(["     从不",
+                           "     2 分钟",
+                           "     5 分钟",
+                           "     10 分钟",
+                           "     20 分钟",
+                           "     30 分钟",
+                           "     1 小时",
+                           "     2 小时",
+                           "     3 小时",
+                           "     4 小时",
+                           "     5 小时"
+                           ],
+                          self.sys_topFiller,
+                          self.system_l,
+                          self.pqss_conmo,
+                          None, None)
+        self.create_title("   睡眠", self.pqss_3title, self.sys_topFiller, self.system_l)
+        self.create_title("    在接通电源且无任何操作的情况下，电脑经过以下时间后进入睡眠状态：", self.pqss_text, self.sys_topFiller, self.system_l)
+        self.create_conmo(["     从不",
+                           "     2 分钟",
+                           "     5 分钟",
+                           "     10 分钟",
+                           "     20 分钟",
+                           "     30 分钟",
+                           "     1 小时",
+                           "     2 小时",
+                           "     3 小时",
+                           "     4 小时",
+                           "     5 小时"],
+                          self.sys_topFiller,
+                          self.system_l,
+                          self.pqss_conmo,
+                          None, None)
+        self.create_title("\n  存储", self.pqss_2title, self.sys_topFiller, self.system_l)
+        self.create_title("     虚拟系统不支持存储设置", self.pqss_text,
+                          self.sys_topFiller, self.system_l)
+        self.create_title("\n  关于", self.pqss_2title, self.sys_topFiller, self.system_l)
+        self.create_title("   操作系统信息", self.pqss_3title, self.sys_topFiller, self.system_l)
+        self.create_title("     系统名称\t\t\tQUISystem", self.pqss_text,
+                          self.sys_topFiller, self.system_l)
+        self.create_title("     系统版本号\t\t\t2024.1", self.pqss_text,
+                          self.sys_topFiller, self.system_l)
+        self.create_title("     操作系统内部版本\t\t241.00001.001", self.pqss_text,
+                          self.sys_topFiller, self.system_l)
+
+    def __computer(self):
+        self.computerWidget = QWidget()
+        self.computerWidget.setStyleSheet(self.pqss_widget)
+        self.computer_Filler = QWidget()
+        # self.sys_topFiller.setMinimumSize(1000, 4500)
+        self.computer_UI()
+        self.computer_SA = QScrollArea(self)
+        self.computer_SA.setWidget(self.computer_Filler)
+        computer_layout = QVBoxLayout()
+        computer_layout.addWidget(self.computer_SA)
+        self.wt.setLayout(computer_layout)
+        self.tabWidget.addTab(self.wt, "设备")
+
+    def computer_UI(self):
+        pass
+
+    @staticmethod
+    def create_title(text: str,
+                     stylesheet: str,
+                     parent: QWidget,
+                     layout: QLayout):
+        title = QLabel()
+        title.setText(text)
+        title.setStyleSheet(stylesheet)
+        layout.addWidget(title)
+        parent.setLayout(layout)
+
+    @staticmethod
+    def create_conmo(text: list[str],
+                     parent: QWidget,
+                     layout: QLayout,
+                     stylesheet: str = None,
+                     event=None, c_text: str | int = None,
+                     ):
+        catalog = _QComboBox()
+        catalog.addItems(text)
+        catalog.setView(QListView())
+        if c_text is not None:
+            if isinstance(c_text, str):
+                catalog.setCurrentText(c_text)
+            elif isinstance(c_text, int):
+                catalog.setCurrentIndex(c_text)
+        if stylesheet is not None:
+            catalog.setStyleSheet(stylesheet)
+        if event is not None:
+            catalog.currentIndexChanged.connect(event)
+        layout.addWidget(catalog)
+        parent.setLayout(layout)
+
+    @staticmethod
+    def create_check_box(text: str,
+                         stylesheet: str,
+                         layout: QLayout,
+                         parent: QWidget,
+                         event=None):
+        checkbox = QCheckBox()
+        checkbox.setText(text)
+        checkbox.setStyleSheet(stylesheet)
+        if event is not None:
+            checkbox.stateChanged.connect(event)
+        layout.addWidget(checkbox)
+        parent.setLayout(layout)
+
+    @staticmethod
+    def switch_to_tab(tab_widget: QTabWidget, tab_title: str):
+        for index in range(tab_widget.count()):
+            if tab_widget.tabText(index) == tab_title:
+                tab_widget.setCurrentIndex(index)
+                break
+
+    def open_tab_by_text_for_main(self, tab_title: str):
+        self.switch_to_tab(self.tabWidget, tab_title)
 
     def initLeftList(self):
         self.bw = self.tabWidget_toLeft
