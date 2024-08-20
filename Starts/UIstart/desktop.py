@@ -9,14 +9,23 @@ from PySide6.QtWidgets import (QMainWindow,
                                QDialog,
                                QApplication,
                                QPushButton,
-                               QMenu, QScrollArea)
-from os import system
+                               QMenu, QScrollArea, QVBoxLayout)
+from os import system, environ
+
+from Starts.UIstart.windowui import FrameLessWindow
 from System.Settings.settings import Settings
 from System.Settings.Settings.theme import THEME
+from Users.ALLUSERS.AppData.QEdge.start000 import QEdge
+from Users.SYSTEM.AppData.WindowsGuiTool.start000 import Win32ApiApps
+from Users.ALLUSERS.AppData.Alist.alistUI import AlistApps
+
+environ["QTWEBENGINE_CHROMIUM_FLAGS"] = "--enable-logging --log-level=3"
+
 
 class Desktop(QMainWindow):
     startmenu_showed: bool
     tasklist: list[str]
+
     def taskbar_init(self):
         def show_menu(pos):
             menu = QMenu(self)
@@ -115,9 +124,8 @@ class Desktop(QMainWindow):
                 self.setting_window = Settings(self)
                 self.setting_window.show()
                 self.tasklist.append("设置")
-            self.backgroundClickedEvent()
-            self.taskbar.raise_()
-            self.startbutton.raise_()
+            else:
+                self.setting_window.raise_()
 
         self.startmenu = QPushButton(self)
         self.startmenu.resize(500, 700)
@@ -158,23 +166,79 @@ class Desktop(QMainWindow):
                                       )
         self.applist_area.setStyleSheet("background-color:rgba(0,0,0,0);border:none;")
         self.applist = QWidget()
-        self.applist.setMinimumSize(self.applist_area.size().width() - 20,2000)
+        self.applist.setMinimumSize(self.applist_area.size().width() - 20, 500)
+        self.applist_l = QVBoxLayout()
+        self.applist.setLayout(self.applist_l)
         self.applist_area.setWidget(self.applist)
-        self.__add_apps(["QEdge"])
+        self.__add_app("QEdge", event=self.qedge_connect, icon=QIcon("Users/ALLUSERS/AppData/QEdge/Assets/main.png"))
+        self.__add_app("Alist", event=self.alist_connect, icon=QIcon("Users/ALLUSERS/AppData/Alist/icon.png"))
+        self.__add_app("Windows 窗口嵌入工具", event=self.win32_connect, icon=QIcon("Users/SYSTEM/AppData/WindowsGuiTool/R-C.png"))
 
-    def __add_apps(self, apps: list[str]):
+    def __add_apps(self, apps: list[str], event: list = None):
         for i in apps:
-            app_button = QPushButton(i, self.applist)
-            app_button.setGeometry(0, apps.index(i)*40, self.applist_area.size().width()-10, 40)
+            app_button = QPushButton(f"{i}", self.applist)
+
             app_button.setStyleSheet("QPushButton {"
                                      "background-color:rgba(0,0,0,0);"
+                                     'font: normal normal 17px "微软雅黑";'
                                      "color:rgb(255,255,255);"
                                      "border:none;"
                                      "}"
                                      "QPushButton:hover {"
-                                     "background-color:rgba(200,200,200,0.8);"
+                                     "background-color:rgba(100,100,100,0.8);"
                                      "color:rgb(255,255,255);"
                                      "}")
+            if event is not None:
+                app_button.clicked.connect(event[apps.index(i)])
+            self.applist_l.addWidget(app_button)
+            self.applist.setLayout(self.applist_l)
+
+    def __add_app(self, apps: str, event=None, icon: QIcon = None):
+        app_button = QPushButton(f"   {apps}", self.applist)
+        if icon is not None:
+            app_button.setIcon(QIcon(icon))
+            app_button.setIconSize(QSize(35, 35))
+
+        app_button.setStyleSheet("QPushButton {"
+                                 "background-color:rgba(0,0,0,0);"
+                                 "text-align:left;"
+                                 'font: normal normal 17px "微软雅黑";'
+                                 "color:rgb(255,255,255);"
+                                 "border:none;"
+                                 "}"
+                                 "QPushButton:hover {"
+                                 "background-color:rgba(100,100,100,0.8);"
+                                 "color:rgb(255,255,255);"
+                                 "}")
+        if event is not None:
+            app_button.clicked.connect(event)
+        self.applist_l.addWidget(app_button)
+        self.applist.setLayout(self.applist_l)
+
+    def qedge_connect(self):
+        if "QEdge" not in self.tasklist:
+            self.qedge.move(150, 150)
+            self.tasklist.append("QEdge")
+            self.qedge.show()
+        else:
+            self.qedge.raise_()
+        self.backgroundClickedEvent()
+
+    def win32_connect(self):
+        if "Windows 窗口嵌入工具" not in self.tasklist:
+            self.win32.setGeometry(400, 400, 500, 300)
+            self.tasklist.append("Windows 窗口嵌入工具")
+            self.win32.show()
+        else:
+            self.win32.raise_()
+
+    def alist_connect(self):
+        if "Alist" not in self.tasklist:
+            self.tasklist.append("Alist")
+            self.alist.setGeometry(100, 100, 1200, 700)
+            self.alist.show()
+        else:
+            self.alist.raise_()
 
     def UIinit(self):
         self.background_init()
@@ -192,6 +256,9 @@ class Desktop(QMainWindow):
         self.showFullScreen()
         self.startmenu_showed = False
         self.setWindowTitle("QSystem")
+        self.qedge = QEdge(self)
+        self.win32 = Win32ApiApps(self)
+        self.alist = AlistApps(self)
 
     def startButtonClickedEvent(self):
         if not self.startmenu_showed:
@@ -247,4 +314,3 @@ class Desktop(QMainWindow):
     def sleepEvent(self):
         self.backgroundClickedEvent()
         self.showMinimized()
-

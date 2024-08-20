@@ -280,70 +280,23 @@ QTabBar:tab:selected
         self.computer_SA.setWidget(self.computer_Filler)
         computer_layout = QVBoxLayout()
         computer_layout.addWidget(self.computer_SA)
-        self.wt.setLayout(computer_layout)
-        self.tabWidget.addTab(self.wt, "设备")
+        self.computerWidget.setLayout(computer_layout)
+        self.tabWidget.addTab(self.computerWidget, "设备")
 
     def computer_UI(self):
-        pass
-
-    @staticmethod
-    def create_title(text: str,
-                     stylesheet: str,
-                     parent: QWidget,
-                     layout: QLayout):
-        title = QLabel()
-        title.setText(text)
-        title.setStyleSheet(stylesheet)
-        layout.addWidget(title)
-        parent.setLayout(layout)
-
-    @staticmethod
-    def create_conmo(text: list[str],
-                     parent: QWidget,
-                     layout: QLayout,
-                     stylesheet: str = None,
-                     event=None, c_text: str | int = None,
-                     ):
-        catalog = _QComboBox()
-        catalog.addItems(text)
-        catalog.setView(QListView())
-        if c_text is not None:
-            if isinstance(c_text, str):
-                catalog.setCurrentText(c_text)
-            elif isinstance(c_text, int):
-                catalog.setCurrentIndex(c_text)
-        if stylesheet is not None:
-            catalog.setStyleSheet(stylesheet)
-        if event is not None:
-            catalog.currentIndexChanged.connect(event)
-        layout.addWidget(catalog)
-        parent.setLayout(layout)
-
-    @staticmethod
-    def create_check_box(text: str,
-                         stylesheet: str,
-                         layout: QLayout,
-                         parent: QWidget,
-                         event=None):
-        checkbox = QCheckBox()
-        checkbox.setText(text)
-        checkbox.setStyleSheet(stylesheet)
-        if event is not None:
-            checkbox.stateChanged.connect(event)
-        layout.addWidget(checkbox)
-        parent.setLayout(layout)
-
-    @staticmethod
-    def switch_to_tab(tab_widget: QTabWidget, tab_title: str):
-        for index in range(tab_widget.count()):
-            if tab_widget.tabText(index) == tab_title:
-                tab_widget.setCurrentIndex(index)
-                break
+        self.computer_l = QVBoxLayout(self.computer_Filler)
+        self.create_title("设备", self.pqss_title, self.computer_Filler, self.computer_l)
+        self.create_title("* 虚拟系统不支持设备设置。", self.pqss_text, self.computer_Filler, self.computer_l)
+        self.create_title("* 某些设置由你的主系统来管理。", self.pqss_text, self.computer_Filler, self.computer_l)
 
     def open_tab_by_text_for_main(self, tab_title: str):
         self.switch_to_tab(self.tabWidget, tab_title)
 
     def initLeftList(self):
+        def event0():
+            self.open_tab_by_text_for_main("系统")
+        def event1():
+            self.open_tab_by_text_for_main("设备")
         self.bw = self.tabWidget_toLeft
         self.bh = 40
         self.th = self.title_height
@@ -373,9 +326,11 @@ QTabBar:tab:selected
         self.button0 = QPushButton("系统", self)
         self.button0.setGeometry(0, self.th, self.bw, self.bh)
         self.button0.setStyleSheet(self.bs)
+        self.button0.clicked.connect(event0)
         self.button1 = QPushButton("设备", self)
         self.button1.setGeometry(0, self.th + self.bh, self.bw, self.bh)
         self.button1.setStyleSheet(self.bs)
+        self.button1.clicked.connect(event1)
         self.button2 = QPushButton("账户", self)
         self.button2.setGeometry(0, self.th + self.bh * 2, self.bw, self.bh)
         self.button2.setStyleSheet(self.bs)

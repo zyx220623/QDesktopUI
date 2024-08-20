@@ -8,9 +8,18 @@ from PySide6.QtGui import (QPixmap,
                            QGuiApplication,
                            QIcon)
 from PySide6.QtWidgets import (QPushButton,
-                               QWidget)
+                               QWidget,
+                               QTabWidget,
+                               QLayout,
+                               QLabel,
+                               QListView,
+                               QComboBox,
+                               QCheckBox)
 from System.Settings.Settings.theme import THEME
 from .switchbutton import SwitchButton
+class _QComboBox(QComboBox):
+    def wheelEvent(self, e):
+        pass
 
 class FrameLessWindow(QPushButton):
     edge: int
@@ -29,9 +38,9 @@ class FrameLessWindow(QPushButton):
         elif self.theme == "light":
             self.button_hovered_color = [230, 230, 230, 1]
             self.minimum_color = [0, 0, 0, 1]
-            self.title_background_color_rgba = [255, 255, 255, 0.5]
+            self.title_background_color_rgba = [255, 255, 255, 0.9]
             self.title_text_color_rgba = [0, 0, 0, 1]
-            self.__background_color_rgba = [255, 255, 255, 0.86]
+            self.__background_color_rgba = [255, 255, 255, 0.95]
 
     def __attributeInit(self):
         self.__theme()
@@ -53,7 +62,7 @@ class FrameLessWindow(QPushButton):
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
         self.__screen__ = QGuiApplication.primaryScreen().size()
 
-    def __init__(self, appname: str = None, apphandle: int = None, parent: QWidget = None,
+    def __init__(self, appname: str = None, apphandle = None, parent: QWidget = None,
                  background_color_rgba: list[int] | tuple[int] | set[int] = (255, 255, 255, 0.9),
                  iconyes: bool = True,
                  taskbar_height: int = 50,
@@ -88,6 +97,22 @@ class FrameLessWindow(QPushButton):
                       (self.__screen__.height() - self.size().height() - self.taskbar_height) // 2)
         self.normal_geometry = QRect(self.pos().x(), self.pos().y(), self.size().width(), self.size().height())
         self.main_widget.clicked.connect(self.windowClickedEvent)
+        self.raise_()
+        self.hide()
+
+    def raise_(self):
+        super().raise_()
+        self.__parent__.taskbar.raise_()
+        self.__parent__.startbutton.raise_()
+        self.__parent__.backgroundClickedEvent()
+    
+    def show(self):
+        super().show()
+        self.raise_()
+        self.__parent__.taskbar.raise_()
+        self.__parent__.startbutton.raise_()
+        self.__parent__.backgroundClickedEvent()
+        self.showNormal()
 
     def setWindowTitle(self, arg__1):
         self.title = arg__1
@@ -109,6 +134,7 @@ class FrameLessWindow(QPushButton):
                                           "}")
 
     def resizeEvent(self, event):
+        self.beforeResizeEventEvent()
         self.WindowTitleBar.setGeometry(self.edge * 3, 0, self.size().width(), 35)
         self.MoveableArea.setGeometry(0, 0, self.size().width(), self.title_height)
         self.ToUpArea.setGeometry(0, 0, self.size().width(), self.edge)
@@ -130,6 +156,11 @@ class FrameLessWindow(QPushButton):
         self.WindowTitleBackground.raise_()
         self.WindowTitleBar.raise_()
         self.MoveableArea.raise_()
+        try:
+            self.icon_image.raise_()
+        except:
+            pass
+        self.customTitleResizeEvent()
         self.CloseButton.raise_()
         self.MaximumButton.raise_()
         self.MinimumButton.raise_()
@@ -141,6 +172,12 @@ class FrameLessWindow(QPushButton):
         self.DownRightArea.raise_()
         self.UpLeftArea.raise_()
         self.DownLeftArea.raise_()
+
+    def customTitleResizeEvent(self):
+        pass
+
+    def beforeResizeEventEvent(self):
+        pass
 
     def __setMainWidget(self):
         self.main_widget = QPushButton(self)
@@ -366,7 +403,7 @@ class FrameLessWindow(QPushButton):
                                                  "}")
         self.WindowTitleBackground.setGeometry(0, 0, self.__screen__.width(), title_height)
         if self.iconyes:
-            self.WindowTitleBar = QPushButton("          " + self.title, self)
+            self.WindowTitleBar = QPushButton("     " + self.title, self)
         else:
             self.WindowTitleBar = QPushButton(self.title, self)
         self.WindowTitleBar.setGeometry(self.edge, 0, self.size().width(), title_height)
@@ -454,6 +491,20 @@ class FrameLessWindow(QPushButton):
         self.MoveableArea.mouseDoubleClickEvent = self.__titleDoubleClickedEvent
         self.__setToUpArea()
 
+    def mousePressEvent(self, e):
+        self.beforeMousePressEventEvent()
+        self.raise_()
+        self.__parent__.taskbar.raise_()
+        self.__parent__.startbutton.raise_()
+        self.__parent__.backgroundClickedEvent()
+        self.afterMousePressEventEvent()
+
+    def beforeMousePressEventEvent(self):
+        pass
+
+    def afterMousePressEventEvent(self):
+        pass
+
     def __setToUpArea(self):
         self.ToUpArea = QPushButton(self.MoveableArea)
         self.ToUpArea.setStyleSheet("QPushButton {"
@@ -526,6 +577,10 @@ class FrameLessWindow(QPushButton):
         event.accept()
 
     def __movePressEvent(self, event: QMouseEvent):
+        self.raise_()
+        self.__parent__.taskbar.raise_()
+        self.__parent__.startbutton.raise_()
+        self.__parent__.backgroundClickedEvent()
         if event.button() == Qt.MouseButton.LeftButton and \
                 event.position().y() <= self.title_height:
             self.is_mouse_pressed = True
@@ -841,8 +896,64 @@ class FrameLessWindow(QPushButton):
 
     def close(self):
         super().close()
-        self.__parent__.tasklist.remove("设置")
+        try:
+            self.__parent__.tasklist.remove(self.appname)
+        except:
+            pass
 
     def windowClickedEvent(self):
         self.raise_()
         self.__parent__.startMenuHideEvent()
+
+    @staticmethod
+    def switch_to_tab(tab_widget: QTabWidget, tab_title: str):
+        for index in range(tab_widget.count()):
+            if tab_widget.tabText(index) == tab_title:
+                tab_widget.setCurrentIndex(index)
+
+    @staticmethod
+    def create_title(text: str,
+                     stylesheet: str,
+                     parent: QWidget,
+                     layout: QLayout):
+        title = QLabel()
+        title.setText(text)
+        title.setStyleSheet(stylesheet)
+        layout.addWidget(title)
+        parent.setLayout(layout)
+
+    @staticmethod
+    def create_conmo(text: list[str],
+                     parent: QWidget,
+                     layout: QLayout,
+                     stylesheet: str = None,
+                     event=None, c_text: str | int = None,
+                     ):
+        catalog = _QComboBox()
+        catalog.addItems(text)
+        catalog.setView(QListView())
+        if c_text is not None:
+            if isinstance(c_text, str):
+                catalog.setCurrentText(c_text)
+            elif isinstance(c_text, int):
+                catalog.setCurrentIndex(c_text)
+        if stylesheet is not None:
+            catalog.setStyleSheet(stylesheet)
+        if event is not None:
+            catalog.currentIndexChanged.connect(event)
+        layout.addWidget(catalog)
+        parent.setLayout(layout)
+
+    @staticmethod
+    def create_check_box(text: str,
+                         stylesheet: str,
+                         layout: QLayout,
+                         parent: QWidget,
+                         event=None):
+        checkbox = QCheckBox()
+        checkbox.setText(text)
+        checkbox.setStyleSheet(stylesheet)
+        if event is not None:
+            checkbox.stateChanged.connect(event)
+        layout.addWidget(checkbox)
+        parent.setLayout(layout)

@@ -7,3 +7,6 @@ class SettingsEvent:
 
     def SYSTEM_RESIZE_EVENT(self):
         pass
+
+    def SYSTEM_DIRECTION(self):
+        pass
